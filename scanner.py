@@ -190,21 +190,39 @@ def _score(result):
 
 # ── Apply ATR stop loss if requested ─────────────────────────────────────
 def _apply_sl_mode(result, df, sl_mode):
-    """Override stop loss with ATR-based calculation if --sl-mode atr."""
+    """Override stop loss with ATR-based calculation if --sl-mode atr.
+    Uses hybrid approach: keeps original structural stops for C&H/Wedge
+    (handle low / wedge low are structurally meaningful), uses ATR stops
+    for patterns without structural stops (S&R, Breakout, etc.)."""
     if sl_mode != "atr":
         return result
+
+    pat = result.get("pattern", "")
+
+    # Patterns that keep their original structural stop
+    # (ATR stops reduced their win rate in backtesting)
+    KEEP_ORIGINAL_STOP = {
+        "Cup & Handle":             True,   # handle low is structural — 48.9% WR vs 34.1% with ATR
+        "Cup & Handle (Weekly)":    True,
+        "Cup & Handle (Monthly)":   True,
+        "Descending Wedge":         True,   # wedge low is structural — 28.6% WR vs 23.0% with ATR
+    }
+
+    if KEEP_ORIGINAL_STOP.get(pat, False):
+        return result  # keep original stop
+
     atr = _calc_atr(df, period=14)
     if atr <= 0:
         return result
     breakout = result.get("breakout", 0)
     cmp = result.get("cmp", 0)
     new_stop = _atr_stop_loss(df, breakout, atr, multiplier=1.5)
-    # Sanity: stop must be below cmp and not too far (max 8%)
     if new_stop > 0 and new_stop < cmp:
         max_stop_drop = cmp * 0.92  # max 8% stop
         new_stop = max(new_stop, max_stop_drop)
         result["stop_loss"] = new_stop
         result["atr"] = round(atr, 2)
+        result["atr_mult"] = 1.5
     return result
 
 

@@ -149,8 +149,35 @@ def _score(result):
     return normalised, round(rr, 2)
 
 
-def _apply_atr_stop(result, df_slice, atr_multiplier=1.5):
-    """Apply ATR-based stop loss."""
+def _apply_atr_stop(result, df_slice, atr_multiplier=None):
+    """Apply ATR-based stop loss with pattern-specific logic.
+
+    Key finding from backtest: C&H and Wedge patterns have structurally
+    meaningful stops (handle low, wedge low) that outperform ATR stops.
+    ATR stops work better for patterns without structural stops (S&R, Breakout).
+
+    Strategy: Keep original stops for C&H/Wedge, use ATR for everything else.
+    """
+    pat = result.get("pattern", "")
+
+    # Patterns that should keep their original structural stop
+    # (ATR stops reduced their win rate significantly in backtesting)
+    KEEP_ORIGINAL_STOP = {
+        "Cup & Handle":             True,   # handle low is structural — 48.9% WR vs 34.1% with ATR
+        "Cup & Handle (Weekly)":    True,
+        "Cup & Handle (Monthly)":   True,
+        "Descending Wedge":         True,   # wedge low is structural — 28.6% WR vs 23.0% with ATR
+        "Double Bottom":            False,  # ATR works fine — 56.6% WR
+    }
+
+    if KEEP_ORIGINAL_STOP.get(pat, False):
+        # Keep the pattern's original stop loss (don't override with ATR)
+        return result
+
+    # Use ATR stop for patterns without structural stops
+    if atr_multiplier is None:
+        atr_multiplier = 1.5
+
     atr = _calc_atr(df_slice, period=14)
     if atr <= 0:
         return result
@@ -162,6 +189,7 @@ def _apply_atr_stop(result, df_slice, atr_multiplier=1.5):
         new_stop = max(new_stop, max_stop_drop)
         result["stop_loss"] = new_stop
         result["atr"] = round(atr, 2)
+        result["atr_mult"] = atr_multiplier
     return result
 
 
