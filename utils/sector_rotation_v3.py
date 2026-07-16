@@ -1,0 +1,261 @@
+"""
+Sector Rotation Engine v3 — Self-contained (no external dependency).
+
+Based on scanner/utils/sector_rotation.py but enhanced:
+  - BOOM/RISING/COOLING/WEAK signals (same as v2)
+  - Bearish mode: identifies WEAK sectors for short setups
+  - NSE Heat Map integration: finds sectors with most selling pressure
+  - Larger stock→sector mapping
+  - Fallback to yfinance .info for unknown stocks
+"""
+import warnings
+warnings.filterwarnings("ignore")
+import yfinance as yf
+import pandas as pd
+
+# NSE Sector indices on yfinance
+SECTOR_INDICES = {
+    'Banking':       '^NSEBANK',
+    'IT':            '^CNXIT',
+    'Pharma':        '^CNXPHARMA',
+    'Auto':          '^CNXAUTO',
+    'Metals':        '^CNXMETAL',
+    'FMCG':          '^CNXFMCG',
+    'Infra':         '^CNXINFRA',
+    'Realty':        '^CNXREALTY',
+    'Energy':        '^CNXENERGY',
+    'Media':         '^CNXMEDIA',
+    'MidCap':        '^NSEMDCP50',
+    'PSU Bank':      '^CNXPSUBANK',
+}
+
+# Stock -> Sector mapping (expanded from scanner/)
+STOCK_SECTOR = {
+    # Banking
+    'HDFCBANK.NS':'Banking','ICICIBANK.NS':'Banking','SBIN.NS':'Banking',
+    'AXISBANK.NS':'Banking','KOTAKBANK.NS':'Banking','BAJFINANCE.NS':'Banking',
+    'PNB.NS':'Banking','BANKBARODA.NS':'Banking','FEDERALBNK.NS':'Banking',
+    'RBLBANK.NS':'Banking','INDUSINDBK.NS':'Banking','IDFCFIRSTB.NS':'Banking',
+    'BANDHANBNK.NS':'Banking','AUBANK.NS':'Banking','DCBBANK.NS':'Banking',
+    'KARURVYSYA.NS':'Banking','CUB.NS':'Banking','CANBK.NS':'Banking',
+    'J&KBANK.NS':'Banking','MAHABANK.NS':'Banking','BANKINDIA.NS':'Banking',
+    'SURYODAY.NS':'Banking','UTKARSHBNK.NS':'Banking','SHIVALIK.NS':'Banking',
+    'REPCAPITAL.NS':'Banking','SBICARD.NS':'Banking','BAJAJFINSV.NS':'Banking',
+    'LTF.NS':'Banking','INDIANB.NS':'Banking','UCOBANK.NS':'Banking',
+    # IT
+    'TCS.NS':'IT','INFY.NS':'IT','WIPRO.NS':'IT','HCLTECH.NS':'IT',
+    'TECHM.NS':'IT','MPHASIS.NS':'IT','LTIM.NS':'IT','PERSISTENT.NS':'IT',
+    'COFORGE.NS':'IT','KPITTECH.NS':'IT','OFSS.NS':'IT','NIITLTD.NS':'IT',
+    'MASTEK.NS':'IT','CYIENT.NS':'IT','BSOFT.NS':'IT','SONATSOFTW.NS':'IT',
+    'TANLA.NS':'IT','ROUTE.NS':'IT','CDSL.NS':'IT','BSE.NS':'IT',
+    'EASEMYTRIP.NS':'IT','LATENTVIEW.NS':'IT','INDIAMART.NS':'IT',
+    'INFIBEAM.NS':'IT','ZENSARTECH.NS':'IT','KELLTONTECH.NS':'IT',
+    # Pharma
+    'SUNPHARMA.NS':'Pharma','DRREDDY.NS':'Pharma','CIPLA.NS':'Pharma',
+    'LUPIN.NS':'Pharma','AUROPHARMA.NS':'Pharma','DIVISLAB.NS':'Pharma',
+    'NATCOPHARM.NS':'Pharma','LAURUSLABS.NS':'Pharma','HIKAL.NS':'Pharma',
+    'BIOCON.NS':'Pharma','ALKEM.NS':'Pharma','IPCALAB.NS':'Pharma',
+    'GLENMARK.NS':'Pharma','GRANULES.NS':'Pharma','SUVEN.NS':'Pharma',
+    'LAUREATE.NS':'Pharma','TORNTPHARM.NS':'Pharma','SYNGENE.NS':'Pharma',
+    'JBIL.NS':'Pharma','MARKSANS.NS':'Pharma','AJANTPHARM.NS':'Pharma',
+    'ORCHPHARMA.NS':'Pharma','ACUTAAS.NS':'Pharma','ROSSARI.NS':'Pharma',
+    # Auto
+    'TATAMOTORS.NS':'Auto','MARUTI.NS':'Auto','M&M.NS':'Auto',
+    'BAJAJ-AUTO.NS':'Auto','HEROMOTOCO.NS':'Auto','EICHERMOT.NS':'Auto',
+    'MOTHERSON.NS':'Auto','BHARATFORG.NS':'Auto','SONACOMS.NS':'Auto',
+    'TVSMOTOR.NS':'Auto','ASHOKLEY.NS':'Auto','BOSCHLTD.NS':'Auto',
+    'BALKRISIND.NS':'Auto','MRF.NS':'Auto','TIINDIA.NS':'Auto',
+    'APOLLOTYRE.NS':'Auto','CRAFTSMAN.NS':'Auto','ENDURANCE.NS':'Auto',
+    'SAMVARDHANA.NS':'Auto','UNO MINDA.NS':'Auto','UNOMINDA.NS':'Auto',
+    # Metals
+    'TATASTEEL.NS':'Metals','JSWSTEEL.NS':'Metals','HINDALCO.NS':'Metals',
+    'VEDL.NS':'Metals','COALINDIA.NS':'Metals','NMDC.NS':'Metals',
+    'SAIL.NS':'Metals','JINDALSTEL.NS':'Metals','HINDZINC.NS':'Metals',
+    'NATIONALUM.NS':'Metals','RATNAMANI.NS':'Metals','MOIL.NS':'Metals',
+    'WELCORP.NS':'Metals','HINDCOPPER.NS':'Metals','SHYAMMETL.NS':'Metals',
+    'APL.NS':'Metals','GALLANTT.NS':'Metals','APLAPOLLO.NS':'Metals',
+    'RATNAMANI.NS':'Metals','JSL.NS':'Metals','APLAPOLLO.NS':'Metals',
+    # FMCG
+    'ITC.NS':'FMCG','HINDUNILVR.NS':'FMCG','NESTLEIND.NS':'FMCG',
+    'DABUR.NS':'FMCG','GODREJCP.NS':'FMCG','MARICO.NS':'FMCG',
+    'BRITANNIA.NS':'FMCG','COLPAL.NS':'FMCG','EMAMILTD.NS':'FMCG',
+    'TATACONSUM.NS':'FMCG','VBL.NS':'FMCG','RADICO.NS':'FMCG',
+    'MCDOWELL-N.NS':'FMCG','UNITEDSPIRIT.NS':'FMCG','GILLETTE.NS':'FMCG',
+    'BAJAJELEC.NS':'FMCG','HAVELLS.NS':'FMCG','VOLTAS.NS':'FMCG',
+    # Energy
+    'RELIANCE.NS':'Energy','ONGC.NS':'Energy','BPCL.NS':'Energy',
+    'HINDPETRO.NS':'Energy','GAIL.NS':'Energy','NTPC.NS':'Energy',
+    'POWERGRID.NS':'Energy','TATAPOWER.NS':'Energy','ADANIGREEN.NS':'Energy',
+    'TORNTPOWER.NS':'Energy','SUZLON.NS':'Energy','CESC.NS':'Energy',
+    'SJVN.NS':'Energy','NHPC.NS':'Energy','ADANIPOWER.NS':'Energy',
+    'JSWENERGY.NS':'Energy','GUVNL.NS':'Energy','IREDA.NS':'Energy',
+    # Infra / Capital Goods
+    'LT.NS':'Infra','SIEMENS.NS':'Infra','ABB.NS':'Infra',
+    'CUMMINSIND.NS':'Infra','THERMAX.NS':'Infra','BHEL.NS':'Infra',
+    'DEEPINDS.NS':'Infra','KIRLOSENG.NS':'Infra','GREAVESCOT.NS':'Infra',
+    'APARINDS.NS':'Infra','TIMKEN.NS':'Infra','KPIL.NS':'Infra',
+    'KALPATPOWR.NS':'Infra','POWERINDIA.NS':'Infra','GVT&D.NS':'Infra',
+    'ULTRACEMCO.NS':'Infra','GRASIM.NS':'Infra','ADANIPORTS.NS':'Infra',
+    'BHARTIARTL.NS':'Infra','CONCOR.NS':'Infra','GMRINFRA.NS':'Infra',
+    'IRB.NS':'Infra','NBCC.NS':'Infra','NCC.NS':'Infra','TECHNO.NS':'Infra',
+    'POLYCAB.NS':'Infra','KEI.NS':'Infra','RITES.NS':'Infra',
+    'RAILTEL.NS':'Infra','IRCON.NS':'Infra','RVNL.NS':'Infra',
+    'AFCONS.NS':'Infra','HGINFRA.NS':'Infra','PNCINFRA.NS':'Infra',
+    # Realty
+    'GODREJPROP.NS':'Realty','OBEROIRLTY.NS':'Realty','DLF.NS':'Realty',
+    'PHOENIXLTD.NS':'Realty','PRESTIGE.NS':'Realty','SOBHA.NS':'Realty',
+    'BRIGADE.NS':'Realty','KOLTEPATIL.NS':'Realty','SUNTECK.NS':'Realty',
+    'LODHA.NS':'Realty','SIGNATURE.NS':'Realty','MAHINDCIE.NS':'Realty',
+    # Defence / Aerospace
+    'ASTRAMICRO.NS':'Defence','CENTUM.NS':'Defence','HAL.NS':'Defence',
+    'BEL.NS':'Defence','BDL.NS':'Defence','MAZDOCK.NS':'Defence',
+    'COSHAL.NS':'Defence','AZAD.NS':'Defence',
+}
+
+# NSE sector -> rotation sector mapping (yfinance fallback)
+YF_SECTOR_MAP = {
+    'Basic Materials':          'Metals',
+    'Consumer Cyclical':        'Auto',
+    'Consumer Defensive':       'FMCG',
+    'Energy':                   'Energy',
+    'Financial Services':       'Banking',
+    'Healthcare':               'Pharma',
+    'Industrials':              'Infra',
+    'Real Estate':              'Realty',
+    'Technology':               'IT',
+    'Communication Services':   'Media',
+    'Utilities':                'Energy',
+}
+
+_cache = {}
+_sector_lookup_cache = {}
+
+
+def get_sector_heat(lookback_short=5, lookback_long=20):
+    """
+    Returns dict: sector -> {'perf_5d', 'perf_20d', 'signal', 'score_bonus'}
+    signal: BOOM / RISING / COOLING / WEAK
+    score_bonus: +20 BOOM, +10 RISING, 0 COOLING, -10 WEAK
+    Cached for the session.
+    """
+    global _cache
+    if _cache:
+        return _cache
+
+    heat = {}
+    for sector, ticker in SECTOR_INDICES.items():
+        try:
+            df = yf.download(ticker, period='3mo', interval='1d',
+                             progress=False, auto_adjust=True)
+            if df is None or df.empty:
+                continue
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
+            if len(df) < lookback_long + 2:
+                continue
+
+            curr   = float(df['Close'].iloc[-1])
+            p5     = float(df['Close'].iloc[-(lookback_short+1)])
+            p20    = float(df['Close'].iloc[-(lookback_long+1)])
+
+            perf_5d  = round((curr - p5)  / p5  * 100, 2)
+            perf_20d = round((curr - p20) / p20 * 100, 2)
+
+            if perf_5d > 2 and perf_20d > 3:
+                signal, bonus = 'BOOM',    20
+            elif perf_5d > 0 and perf_20d > 0:
+                signal, bonus = 'RISING',  10
+            elif perf_5d < 0 and perf_20d > 0:
+                signal, bonus = 'COOLING',  0
+            else:
+                signal, bonus = 'WEAK',   -10
+
+            heat[sector] = {
+                'perf_5d':  perf_5d,
+                'perf_20d': perf_20d,
+                'signal':   signal,
+                'bonus':    bonus,
+            }
+        except Exception:
+            pass
+
+    _cache = heat
+    return heat
+
+
+def get_stock_sector(symbol):
+    """Return sector name. Checks hardcoded map first, then yfinance as fallback."""
+    global _sector_lookup_cache
+    sym_ns  = symbol if symbol.endswith('.NS') else symbol + '.NS'
+    sym_raw = symbol.replace('.NS','')
+
+    # 1. Hardcoded map (instant)
+    sec = STOCK_SECTOR.get(sym_ns) or STOCK_SECTOR.get(sym_raw)
+    if sec:
+        return sec
+
+    # 2. Session cache
+    if sym_ns in _sector_lookup_cache:
+        return _sector_lookup_cache[sym_ns]
+
+    # 3. yfinance info (slow but accurate — cached after first call)
+    try:
+        import contextlib, io
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            info = yf.Ticker(sym_ns).info
+        yf_sector = info.get('sector', '')
+        mapped = YF_SECTOR_MAP.get(yf_sector, yf_sector or 'Unknown')
+        _sector_lookup_cache[sym_ns] = mapped
+        return mapped
+    except Exception:
+        _sector_lookup_cache[sym_ns] = 'Unknown'
+        return 'Unknown'
+
+
+def get_sector_bonus(symbol):
+    """
+    Returns (sector, signal, score_bonus) for a symbol.
+    Used by scanner.py to boost/penalise score.
+    """
+    heat   = get_sector_heat()
+    sector = get_stock_sector(symbol)
+    if sector == 'Unknown' or sector not in heat:
+        return sector, 'Unknown', 0
+    h = heat[sector]
+    return sector, h['signal'], h['bonus']
+
+
+def get_weak_sectors():
+    """Return list of (sector, perf_5d, perf_20d) for WEAK sectors — for bearish scans."""
+    heat = get_sector_heat()
+    weak = [(s, h['perf_5d'], h['perf_20d'])
+            for s, h in heat.items() if h['signal'] == 'WEAK']
+    return sorted(weak, key=lambda x: x[1])
+
+
+def get_hot_sectors(top_n=3):
+    """Return list of (sector, perf_5d, perf_20d) for top-performing sectors."""
+    heat = get_sector_heat()
+    hot = [(s, h['perf_5d'], h['perf_20d'])
+           for s, h in heat.items() if h['signal'] in ('BOOM', 'RISING')]
+    return sorted(hot, key=lambda x: x[1], reverse=True)[:top_n]
+
+
+def print_sector_heatmap():
+    """Print current sector rotation heatmap."""
+    heat = get_sector_heat()
+    rows = sorted(heat.items(), key=lambda x: x[1]['perf_5d'], reverse=True)
+    print('\n  SECTOR ROTATION HEATMAP')
+    print(f'  {"Sector":<16} {"5D":>7} {"20D":>7}  Signal')
+    print('  ' + '-'*48)
+    for s, h in rows:
+        icon = '[+]' if h['signal']=='BOOM' else '[>]' if h['signal']=='RISING' else '[<]' if h['signal']=='COOLING' else '[-]'
+        print(f'  {s:<16} {h["perf_5d"]:>+6.2f}%  {h["perf_20d"]:>+6.2f}%  {icon} {h["signal"]}')
+    print()
+
+
+if __name__ == '__main__':
+    print_sector_heatmap()
+    print("\n  Weak sectors (for bearish scans):")
+    for s, p5, p20 in get_weak_sectors():
+        print(f"    {s:<16} 5d={p5:+.2f}%  20d={p20:+.2f}%")
