@@ -113,6 +113,69 @@ BACKBONE = [
     "ROSSARI","SHAKTIPUMP","POCL","VINDHYATEL","GTLINFRA",
 ]
 
+
+# ── DYNAMIC STOCK LOADING ─────────────────────────────────────────────────
+def _load_weekly_scan_picks(max_stocks=50):
+    """Read top stocks from the latest weekly scan CSV.
+    These are fresh pattern setups that need daily monitoring for entry triggers."""
+    import glob
+    results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+    files = [f for f in glob.glob(os.path.join(results_dir, "v3_*.csv")) if "_all" not in f]
+    if not files:
+        files = [f for f in glob.glob(os.path.join(results_dir, "v2_*.csv")) if "_all" not in f]
+    if not files:
+        return []
+    files.sort(key=lambda f: os.path.getmtime(f))
+    try:
+        df = pd.read_csv(files[-1])
+        syms = df["symbol"].head(max_stocks).tolist()
+        # Strip .NS suffix
+        return [s.replace(".NS", "").replace(".BO", "") for s in syms]
+    except Exception:
+        return []
+
+
+def _load_nifty500():
+    """Load Nifty 500 stocks for broad coverage of liquid stocks."""
+    fpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "nifty500.txt")
+    try:
+        with open(fpath) as f:
+            return [line.strip() for line in f if line.strip() and not line.startswith("#")]
+    except FileNotFoundError:
+        return []
+
+
+def _build_dynamic_universe(use_weekly_picks=True, use_nifty500=True):
+    """Build the daily scan universe from three sources:
+    1. Backbone 50 (stable momentum stocks — always watched)
+    2. Latest weekly scan picks (fresh pattern setups — changes every scan)
+    3. Nifty 500 (broad coverage of liquid stocks)
+    Plus hot/weak sector stocks based on today's sector performance.
+    Returns (all_symbols, weekly_picks, nifty500_count) tuple.
+    """
+    stocks = list(BACKBONE)  # start with backbone
+
+    weekly_picks = []
+    if use_weekly_picks:
+        weekly_picks = _load_weekly_scan_picks(max_stocks=50)
+        stocks.extend(weekly_picks)
+
+    nifty500 = []
+    if use_nifty500:
+        nifty500 = _load_nifty500()
+        stocks.extend(nifty500)
+
+    # Deduplicate preserving order
+    seen = set()
+    unique = []
+    for s in stocks:
+        s_clean = s.strip().upper()
+        if s_clean and s_clean not in seen:
+            seen.add(s_clean)
+            unique.append(s_clean)
+
+    return unique, len(weekly_picks), len(nifty500)
+
 SURGE_THRESHOLD = 1.8   # volume > 1.8x 20-day avg
 
 
@@ -267,28 +330,46 @@ def main():
             hot_sectors = [sector_perf[0][0]]
         print(f"\n  Hot sectors today: {', '.join(hot_sectors)}")
 
-    # Step 3: Build stock universe
+    # Step 3: Build stock universe (DYNAMIC — changes every day)
+    # Sources: Backbone 50 + latest weekly scan picks + Nifty 500 + hot sector stocks
     sector_syms = []
     for sec in hot_sectors:
         sector_syms += SECTOR_STOCKS.get(sec, [])
     sector_syms = list(dict.fromkeys(sector_syms))
 
-    all_syms = list(dict.fromkeys(BACKBONE + sector_syms))
-    print(f"\n  Scanning {len(BACKBONE)} backbone + {len(sector_syms)} sector stocks = {len(all_syms)} total\n")
+    # Load dynamic stocks: weekly scan picks + Nifty 500
+    dynamic_stocks, weekly_count, nifty_count = _build_dynamic_universe(
+        use_weekly_picks=True, use_nifty500=True
+    )
 
-    # Step 4: Scan
+    # Combine everything: backbone + weekly picks + nifty500 + hot sector stocks
+    all_syms = list(dict.fromkeys(BACKBONE + dynamic_stocks + sector_syms))
+    print(f"\n  Universe: {len(BACKBONE)} backbone + {weekly_count} weekly picks + {nifty_count} Nifty500 + {len(sector_syms)} sector = {len(all_syms)} total\n")
+
+    # Step 4: Scan (split into batches for progress reporting)
+    # Scan backbone first (fast, always watched)
     backbone_results = run_scan(BACKBONE, "Backbone")
-    sector_results   = run_scan(sector_syms, "Sector")
+
+    # Scan the dynamic picks (weekly scan picks + Nifty 500 — these change daily)
+    dynamic_only = [s for s in dynamic_stocks if s not in set(BACKBONE)]
+    dynamic_results = run_scan(dynamic_only, "Dynamic (weekly picks + Nifty500)")
+
+    # Scan hot sector stocks
+    sector_only = [s for s in sector_syms if s not in set(all_syms) - set(sector_syms)]
+    sector_results = run_scan(sector_syms, "Sector")
 
     # v3: Price filter
     if args.min_price or args.max_price:
         backbone_results = [r for r in backbone_results
                             if (args.min_price is None or r["close"] >= args.min_price) and
                                (args.max_price is None or r["close"] <= args.max_price)]
+        dynamic_results = [r for r in dynamic_results
+                           if (args.min_price is None or r["close"] >= args.min_price) and
+                              (args.max_price is None or r["close"] <= args.max_price)]
         sector_results = [r for r in sector_results
                           if (args.min_price is None or r["close"] >= args.min_price) and
                              (args.max_price is None or r["close"] <= args.max_price)]
-        print(f"  After price filter: {len(backbone_results)} backbone, {len(sector_results)} sector stocks")
+        print(f"  After price filter: {len(backbone_results)} backbone, {len(dynamic_results)} dynamic, {len(sector_results)} sector stocks")
 
     # Step 5: Print
     if args.bearish:
@@ -307,13 +388,26 @@ def main():
     else:
         print_results(backbone_results, "BACKBONE 50 — Volume & Movers", top=args.top)
 
+        # Show dynamic picks (weekly scan picks + Nifty 500 that aren't in backbone)
+        if dynamic_results:
+            print_results(dynamic_results, "WEEKLY PICKS + NIFTY 500 — Fresh Setups", top=args.top)
+
         for sec in hot_sectors:
             sec_syms = SECTOR_STOCKS.get(sec, [])
             sec_res  = [r for r in sector_results if r["symbol"] in sec_syms]
             print_results(sec_res, f"HOT SECTOR — {sec}", top=args.top)
 
-        # Step 6: Top picks across all
-        all_results = backbone_results + [r for r in sector_results if r["symbol"] not in BACKBONE]
+        # Step 6: Top picks across ALL sources (backbone + dynamic + sector)
+        all_results = backbone_results + dynamic_results + [r for r in sector_results if r["symbol"] not in BACKBONE]
+        # Deduplicate by symbol
+        seen_syms = set()
+        deduped = []
+        for r in all_results:
+            if r["symbol"] not in seen_syms:
+                seen_syms.add(r["symbol"])
+                deduped.append(r)
+        all_results = deduped
+
         surges = [r for r in all_results if r["vol_ratio"] >= SURGE_THRESHOLD]
         surges.sort(key=lambda x: x["vol_ratio"], reverse=True)
 
