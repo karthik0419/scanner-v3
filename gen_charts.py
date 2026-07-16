@@ -251,8 +251,36 @@ def plot(symbol):
     print(f"  {symbol}: 3 charts saved")
 
 
+def _load_stocks_from_csv():
+    """Read top stocks from latest v3 results CSV. Falls back to hardcoded list.
+    Picks the most recently MODIFIED CSV (not alphabetically last)."""
+    import glob
+    import os
+    results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+    # Find all v3 CSVs (excluding _all extended lists), sort by modification time
+    files = [f for f in glob.glob(os.path.join(results_dir, "v3_*.csv")) if "_all" not in f]
+    if not files:
+        files = [f for f in glob.glob(os.path.join(results_dir, "v2_*.csv")) if "_all" not in f]
+    if not files:
+        print("  No results CSV found — using hardcoded list.")
+        return STOCKS
+    # Sort by modification time (newest last)
+    files.sort(key=lambda f: os.path.getmtime(f))
+    latest = files[-1]
+    try:
+        df = pd.read_csv(latest)
+        syms = df["symbol"].head(30).tolist()
+        print(f"  Reading charts from: {os.path.basename(latest)} ({len(df)} setups)")
+        # Strip .NS suffix for chart generation
+        return [s.replace(".NS", "") for s in syms]
+    except Exception:
+        return STOCKS
+
+
 if __name__ == "__main__":
-    print(f"Saving to {CHARTS_DIR}/daily|weekly|monthly\n")
-    for s in STOCKS:
+    stocks = _load_stocks_from_csv()
+    print(f"Saving to {CHARTS_DIR}/daily|weekly|monthly")
+    print(f"Generating charts for {len(stocks)} stocks...\n")
+    for s in stocks:
         plot(s)
     print("\nDone.")

@@ -108,15 +108,20 @@ def main():
         print("Missing TELEGRAM_TOKEN or TELEGRAM_CHAT_ID in .env")
         sys.exit(1)
 
-    # Find latest CSV
+    # Find latest CSV (by modification time, not alphabetical)
     if args.csv:
         csv_path = args.csv
     else:
         results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
-        files = sorted([f for f in glob.glob(os.path.join(results_dir, "v2_*.csv")) if "_all" not in f])
+        # v3 produces v3_*.csv; also check v2_*.csv for backward compat
+        files = [f for f in glob.glob(os.path.join(results_dir, "v3_*.csv")) if "_all" not in f]
+        if not files:
+            files = [f for f in glob.glob(os.path.join(results_dir, "v2_*.csv")) if "_all" not in f]
         if not files:
             print("No results CSV found. Run scanner.py first.")
             sys.exit(1)
+        # Sort by modification time (newest last)
+        files.sort(key=lambda f: os.path.getmtime(f))
         csv_path = files[-1]
 
     print(f"Reading: {csv_path}")
