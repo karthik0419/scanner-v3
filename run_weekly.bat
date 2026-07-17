@@ -194,7 +194,7 @@ goto MENU
 cls
 echo.
 echo  ================================================================
-echo    BACKTEST - v3 vs v2 Comparison
+echo    BACKTEST - v3 vs v2 Comparison (Backbone50, In-Sample)
 echo  ================================================================
 echo.
 echo  Runs walk-forward backtest on backbone50 stocks (2 years).
@@ -219,7 +219,7 @@ echo    BACKTEST - v3 vs v2 Comparison (Nifty 200, Out-of-Sample)
 echo  ================================================================
 echo.
 echo  Runs walk-forward backtest on nifty200 stocks (2 years).
-echo  This is the OUT-OF-SAMPLE test — validates that fixes
+echo  This is the OUT-OF-SAMPLE test -- validates that fixes
 echo  generalize beyond the backbone50 in-sample dataset.
 echo  Takes about 15-25 minutes (200 stocks x 2 modes).
 echo.
