@@ -26,9 +26,13 @@ for n in ["yfinance", "urllib3"]: logging.getLogger(n).setLevel(logging.CRITICAL
 import yfinance as yf
 import pandas as pd
 from datetime import date
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Telegram notification (auto-sends after scan completes)
 from telegram_notify import send_daily_summary
+
+# Sector mapping (uses NSE official data + yfinance fallback)
+from utils.sector_rotation_v3 import get_stock_sector, STOCK_SECTOR
 
 # ── SECTOR INDICES (NSE) ────────────────────────────────────────────────────
 SECTOR_INDICES = {
@@ -179,6 +183,87 @@ def _build_dynamic_universe(use_weekly_picks=True, use_nifty500=True):
 
     return unique, len(weekly_picks), len(nifty500)
 
+
+def _get_stocks_in_sectors(sector_names):
+    """Get ALL stocks in the given sectors from the NSE sector map.
+
+    Uses data/nse_sectors.json (568+ stocks) instead of the hardcoded
+    SECTOR_STOCKS dict which only had ~15 stocks per sector.
+
+    Args:
+        sector_names: list of sector names (e.g. ['Banking', 'IT'])
+                      or NSE index names (e.g. ['BANK', 'IT'])
+    Returns: list of stock symbols (without .NS suffix)
+    """
+    # Map NSE index names to our sector names
+    SECTOR_NAME_MAP = {
+        'METAL': 'Metals', 'AUTO': 'Auto', 'BANK': 'Banking',
+        'IT': 'IT', 'PHARMA': 'Pharma', 'FMCG': 'FMCG',
+        'REALTY': 'Realty', 'ENERGY': 'Energy', 'INFRA': 'Infra',
+        'MEDIA': 'Media', 'PSU': 'PSU Bank', 'MIDCAP': 'MidCap',
+    }
+
+    target_sectors = set()
+    for s in sector_names:
+        s_upper = s.upper()
+        mapped = SECTOR_NAME_MAP.get(s_upper, s.capitalize())
+        target_sectors.add(mapped)
+
+    # Look up all stocks in these sectors from the NSE sector map
+    stocks = []
+    for sym_ns, sector in STOCK_SECTOR.items():
+        if sector in target_sectors:
+            stocks.append(sym_ns.replace('.NS', ''))
+
+    return stocks
+
+
+def _build_smart_universe(hot_sectors, use_weekly_picks=True, use_nifty500=True):
+    """Build a SMART daily scan universe — catches most movers without scanning all 2000+.
+
+    Sources (combined & deduplicated):
+    1. Backbone 50 (always watched)
+    2. Nifty 500 (broad liquid stock coverage)
+    3. Latest weekly scan picks (fresh pattern setups)
+    4. ALL stocks in today's hot sectors (from NSE sector map — 50-100+ per sector)
+       This is the key upgrade: instead of ~15 hardcoded stocks per hot sector,
+       we now get ALL stocks in that sector from the 568-stock NSE mapping.
+
+    Args:
+        hot_sectors: list of sector names that are hot today (e.g. ['BANK', 'IT'])
+    Returns: (all_symbols, breakdown_dict)
+    """
+    stocks = list(BACKBONE)
+    breakdown = {'backbone': len(BACKBONE), 'weekly': 0, 'nifty500': 0, 'hot_sector': 0}
+
+    # Weekly picks
+    if use_weekly_picks:
+        weekly = _load_weekly_scan_picks(max_stocks=50)
+        stocks.extend(weekly)
+        breakdown['weekly'] = len(weekly)
+
+    # Nifty 500
+    if use_nifty500:
+        n500 = _load_nifty500()
+        stocks.extend(n500)
+        breakdown['nifty500'] = len(n500)
+
+    # All stocks in hot sectors (from NSE sector map — much larger than hardcoded list)
+    hot_sector_stocks = _get_stocks_in_sectors(hot_sectors)
+    stocks.extend(hot_sector_stocks)
+    breakdown['hot_sector'] = len(hot_sector_stocks)
+
+    # Deduplicate preserving order
+    seen = set()
+    unique = []
+    for s in stocks:
+        s_clean = s.strip().upper()
+        if s_clean and s_clean not in seen:
+            seen.add(s_clean)
+            unique.append(s_clean)
+
+    return unique, breakdown
+
 SURGE_THRESHOLD = 1.8   # volume > 1.8x 20-day avg
 
 
@@ -227,14 +312,42 @@ def get_price_info(symbol):
         return None
 
 
-def run_scan(symbols, label=""):
+def run_scan(symbols, label="", workers=8):
+    """Scan stocks for price + volume info. Uses thread pool for speed.
+
+    Args:
+        symbols: list of stock symbols (without .NS)
+        label: label for progress printing
+        workers: number of parallel threads (default 8)
+    """
     results = []
     total = len(symbols)
-    for i, sym in enumerate(symbols):
-        print(f"  [{i+1}/{total}] {sym:<15}", end="\r")
-        info = get_price_info(sym)
-        if info:
-            results.append(info)
+    if total == 0:
+        return results
+
+    print(f"  Scanning {total} stocks ({label})..." + (f" [{workers} threads]" if workers > 1 else ""))
+
+    if workers <= 1:
+        # Sequential mode (for debugging)
+        for i, sym in enumerate(symbols):
+            print(f"  [{i+1}/{total}] {sym:<15}", end="\r")
+            info = get_price_info(sym)
+            if info:
+                results.append(info)
+        print(" " * 40, end="\r")
+        return results
+
+    # Parallel mode — thread pool
+    done = 0
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {executor.submit(get_price_info, sym): sym for sym in symbols}
+        for future in as_completed(futures):
+            done += 1
+            if done % 50 == 0 or done == total:
+                print(f"  [{done}/{total}] scanned", end="\r")
+            info = future.result()
+            if info:
+                results.append(info)
     print(" " * 40, end="\r")
     return results
 
@@ -290,6 +403,10 @@ def main():
     parser.add_argument("--max-price", type=float, default=None, help="Max stock price (e.g. 400)")
     parser.add_argument("--bearish", action="store_true", help="Find weak sectors + short candidates")
     parser.add_argument("--no-notify", action="store_true", help="Skip Telegram notification")
+    parser.add_argument("--full", action="store_true",
+                        help="Scan full NSE EQ universe (~2000+ stocks). Slower but catches everything.")
+    parser.add_argument("--workers", type=int, default=8,
+                        help="Number of parallel download threads (default 8)")
     args = parser.parse_args()
 
     today = date.today().strftime("%d-%b-%Y")
@@ -334,33 +451,35 @@ def main():
             hot_sectors = [sector_perf[0][0]]
         print(f"\n  Hot sectors today: {', '.join(hot_sectors)}")
 
-    # Step 3: Build stock universe (DYNAMIC — changes every day)
-    # Sources: Backbone 50 + latest weekly scan picks + Nifty 500 + hot sector stocks
-    sector_syms = []
-    for sec in hot_sectors:
-        sector_syms += SECTOR_STOCKS.get(sec, [])
-    sector_syms = list(dict.fromkeys(sector_syms))
+    # Step 3: Build stock universe
+    if args.full:
+        # Full NSE EQ universe (~2000+ stocks)
+        from data.nse_eq import fetch_nse_eq_universe
+        print("\n  Loading full NSE EQ universe...")
+        all_syms_ns = fetch_nse_eq_universe()
+        all_syms = [s.replace(".NS", "") for s in all_syms_ns]
+        print(f"\n  Universe: FULL NSE EQ = {len(all_syms)} stocks\n")
+        # Scan in one batch
+        all_results = run_scan(all_syms, "Full NSE EQ", workers=args.workers)
+        backbone_results = [r for r in all_results if r["symbol"] in set(BACKBONE)]
+        dynamic_results = [r for r in all_results if r["symbol"] not in set(BACKBONE)]
+        sector_results = []
+        sector_syms = []
+    else:
+        # Smart universe: Backbone + Nifty 500 + weekly picks + ALL stocks in hot sectors
+        all_syms, breakdown = _build_smart_universe(
+            hot_sectors, use_weekly_picks=True, use_nifty500=True
+        )
+        print(f"\n  Universe (SMART): {breakdown['backbone']} backbone + "
+              f"{breakdown['weekly']} weekly picks + {breakdown['nifty500']} Nifty500 + "
+              f"{breakdown['hot_sector']} hot sector stocks = {len(all_syms)} total\n")
 
-    # Load dynamic stocks: weekly scan picks + Nifty 500
-    dynamic_stocks, weekly_count, nifty_count = _build_dynamic_universe(
-        use_weekly_picks=True, use_nifty500=True
-    )
-
-    # Combine everything: backbone + weekly picks + nifty500 + hot sector stocks
-    all_syms = list(dict.fromkeys(BACKBONE + dynamic_stocks + sector_syms))
-    print(f"\n  Universe: {len(BACKBONE)} backbone + {weekly_count} weekly picks + {nifty_count} Nifty500 + {len(sector_syms)} sector = {len(all_syms)} total\n")
-
-    # Step 4: Scan (split into batches for progress reporting)
-    # Scan backbone first (fast, always watched)
-    backbone_results = run_scan(BACKBONE, "Backbone")
-
-    # Scan the dynamic picks (weekly scan picks + Nifty 500 — these change daily)
-    dynamic_only = [s for s in dynamic_stocks if s not in set(BACKBONE)]
-    dynamic_results = run_scan(dynamic_only, "Dynamic (weekly picks + Nifty500)")
-
-    # Scan hot sector stocks
-    sector_only = [s for s in sector_syms if s not in set(all_syms) - set(sector_syms)]
-    sector_results = run_scan(sector_syms, "Sector")
+        # Scan all at once with thread pool (faster than separate batches)
+        all_results = run_scan(all_syms, "Smart universe", workers=args.workers)
+        backbone_results = [r for r in all_results if r["symbol"] in set(BACKBONE)]
+        dynamic_results = [r for r in all_results if r["symbol"] not in set(BACKBONE)]
+        sector_results = []
+        sector_syms = []
 
     # v3: Price filter
     if args.min_price or args.max_price:
@@ -378,7 +497,9 @@ def main():
     # Step 5: Print
     if args.bearish:
         # Bearish: show stocks with most selling (biggest negative % change)
-        all_sector = [r for r in sector_results if r["symbol"] in sector_syms]
+        # Filter to stocks in weak sectors using our sector map
+        weak_sector_stocks = set(_get_stocks_in_sectors(hot_sectors))
+        all_sector = [r for r in all_results if r["symbol"] in weak_sector_stocks]
         all_sector.sort(key=lambda x: x["pct_chg"])  # worst first
         print(f"\n{'='*70}")
         print(f"  BEARISH CANDIDATES — Most Selling in Weak Sectors")
@@ -392,17 +513,18 @@ def main():
     else:
         print_results(backbone_results, "BACKBONE 50 — Volume & Movers", top=args.top)
 
-        # Show dynamic picks (weekly scan picks + Nifty 500 that aren't in backbone)
+        # Show all non-backbone results
         if dynamic_results:
-            print_results(dynamic_results, "WEEKLY PICKS + NIFTY 500 — Fresh Setups", top=args.top)
+            print_results(dynamic_results, "ALL SCANNED STOCKS — Volume & Movers", top=args.top)
 
+        # Show hot sector stocks specifically
         for sec in hot_sectors:
-            sec_syms = SECTOR_STOCKS.get(sec, [])
-            sec_res  = [r for r in sector_results if r["symbol"] in sec_syms]
-            print_results(sec_res, f"HOT SECTOR — {sec}", top=args.top)
+            sec_stocks = set(_get_stocks_in_sectors([sec]))
+            sec_res = [r for r in all_results if r["symbol"] in sec_stocks]
+            print_results(sec_res, f"HOT SECTOR — {sec} ({len(sec_res)} stocks)", top=args.top)
 
-        # Step 6: Top picks across ALL sources (backbone + dynamic + sector)
-        all_results = backbone_results + dynamic_results + [r for r in sector_results if r["symbol"] not in BACKBONE]
+        # Step 6: Top picks across ALL sources
+        all_results_combined = backbone_results + dynamic_results
         # Deduplicate by symbol
         seen_syms = set()
         deduped = []
