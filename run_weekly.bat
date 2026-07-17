@@ -16,26 +16,28 @@ echo   2.  Full scan + price filter (100-400 Rs)
 echo   3.  Full scan + custom price range
 echo   4.  Full scan + bearish mode (short setups)
 echo   5.  Quick test (50 stocks only)
-echo   6.  Backtest v3 vs v2 comparison (backbone50, in-sample)
-echo   7.  Backtest v3 vs v2 comparison (nifty200, out-of-sample)
-echo   8.  Backtest v3 only
-echo   9.  Paper tracker - update prices + show status
-echo  10.  Paper tracker - initialize from latest scan
-echo  11.  Exit
+echo   6.  Scan by timeframe (daily / weekly / monthly only)
+echo   7.  Backtest v3 vs v2 comparison (backbone50, in-sample)
+echo   8.  Backtest v3 vs v2 comparison (nifty200, out-of-sample)
+echo   9.  Backtest v3 only
+echo  10.  Paper tracker - update prices + show status
+echo  11.  Paper tracker - initialize from latest scan
+echo  12.  Exit
 echo.
-set /p choice="  Enter choice [1-11]: "
+set /p choice="  Enter choice [1-12]: "
 
 if "%choice%"=="1" goto FULL_SCAN
 if "%choice%"=="2" goto PRICE_FILTER
 if "%choice%"=="3" goto CUSTOM_PRICE
 if "%choice%"=="4" goto BEARISH
 if "%choice%"=="5" goto TEST_MODE
-if "%choice%"=="6" goto BACKTEST_COMPARE
-if "%choice%"=="7" goto BACKTEST_NIFTY200
-if "%choice%"=="8" goto BACKTEST_V3
-if "%choice%"=="9" goto PAPER_UPDATE
-if "%choice%"=="10" goto PAPER_INIT
-if "%choice%"=="11" exit /b 0
+if "%choice%"=="6" goto TIMEFRAME_SCAN
+if "%choice%"=="7" goto BACKTEST_COMPARE
+if "%choice%"=="8" goto BACKTEST_NIFTY200
+if "%choice%"=="9" goto BACKTEST_V3
+if "%choice%"=="10" goto PAPER_UPDATE
+if "%choice%"=="11" goto PAPER_INIT
+if "%choice%"=="12" exit /b 0
 echo  Invalid choice.
 pause
 goto MENU
@@ -185,6 +187,48 @@ if errorlevel 1 (
 echo.
 echo  ================================================================
 echo    TEST COMPLETE
+echo  ================================================================
+echo.
+pause
+goto MENU
+
+:TIMEFRAME_SCAN
+cls
+echo.
+echo  ================================================================
+echo    SCAN BY TIMEFRAME
+echo  ================================================================
+echo.
+echo  Filter patterns by timeframe. Useful for manual verification:
+echo    daily   - Day-level patterns (Double Bottom, Wedge, Triangle, etc.)
+echo    weekly  - Week-level patterns (C&H Weekly only currently)
+echo    monthly - Month-level patterns (C&H Monthly only currently)
+echo.
+echo  Each result will show the timeframe so you can verify on charts.
+echo.
+set /p tfchoice="  Enter timeframe [daily/weekly/monthly]: "
+if "%tfchoice%"=="" goto MENU
+echo.
+echo  [1/4] Running scanner with --timeframe %tfchoice%...
+python scanner.py --top 30 --min-score 50 --timeframe %tfchoice%
+if errorlevel 1 (
+    echo.
+    echo  Scanner failed. Check errors above.
+    pause
+    goto MENU
+)
+echo.
+echo  [2/4] Generating charts for top picks...
+python gen_charts.py
+if errorlevel 1 echo  Chart generation failed (non-critical).
+echo.
+echo  [3/4] Telegram notification sent automatically by scanner.
+echo.
+echo  [4/4] Opening results folder...
+start "" "results"
+echo.
+echo  ================================================================
+echo    SCAN COMPLETE - Results saved to results\ folder
 echo  ================================================================
 echo.
 pause

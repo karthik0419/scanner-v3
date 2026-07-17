@@ -95,25 +95,56 @@ def _atr_stop_loss(df, breakout, atr, multiplier=1.5):
 
 
 # ── Pattern detection (same priority as v2, Double Bottom promoted) ─────
-def _detect_pattern(df_daily, df_weekly):
-    dfm = resample_monthly(df_daily)
-    return (
-        detect_cup_handle_monthly(dfm) or
-        detect_cup_handle_weekly(df_weekly) or
-        detect_cup_handle(df_daily) or
-        detect_double_bottom(df_daily) or          # promoted: 100% win rate
-        detect_descending_channel(df_daily) or
-        detect_ascending_channel(df_daily) or
-        detect_triangle(df_daily) or
-        detect_darvas_box(df_daily) or
-        detect_flag_pennant(df_daily) or
-        detect_descending_wedge(df_daily) or
-        detect_sr_levels(df_daily) or
-        detect_break_retest(df_daily) or
-        detect_retest(df_daily) or
-        detect_compression(df_daily) or
-        detect_breakout(df_daily)
-    )
+def _detect_pattern(df_daily, df_weekly, timeframe_filter=None):
+    """Detect pattern on daily/weekly/monthly. Returns result dict or None.
+
+    Args:
+        df_daily: daily OHLCV dataframe
+        df_weekly: weekly OHLCV dataframe
+        timeframe_filter: if set ('daily', 'weekly', 'monthly', 'all'),
+                          only detect patterns on that timeframe.
+                          Default None = all timeframes (current behavior).
+    The result dict gets a 'timeframe' key added ('Daily', 'Weekly', or 'Monthly').
+    """
+    tf = (timeframe_filter or 'all').lower()
+
+    # Monthly patterns
+    if tf in ('all', 'monthly'):
+        dfm = resample_monthly(df_daily)
+        result = detect_cup_handle_monthly(dfm)
+        if result:
+            result['timeframe'] = 'Monthly'
+            return result
+
+    # Weekly patterns
+    if tf in ('all', 'weekly'):
+        result = detect_cup_handle_weekly(df_weekly)
+        if result:
+            result['timeframe'] = 'Weekly'
+            return result
+
+    # Daily patterns
+    if tf in ('all', 'daily'):
+        result = (
+            detect_cup_handle(df_daily) or
+            detect_double_bottom(df_daily) or          # promoted: 100% win rate
+            detect_descending_channel(df_daily) or
+            detect_ascending_channel(df_daily) or
+            detect_triangle(df_daily) or
+            detect_darvas_box(df_daily) or
+            detect_flag_pennant(df_daily) or
+            detect_descending_wedge(df_daily) or
+            detect_sr_levels(df_daily) or
+            detect_break_retest(df_daily) or
+            detect_retest(df_daily) or
+            detect_compression(df_daily) or
+            detect_breakout(df_daily)
+        )
+        if result:
+            result['timeframe'] = 'Daily'
+            return result
+
+    return None
 
 
 # ── Targets with trailing stop logic ─────────────────────────────────────
@@ -286,6 +317,9 @@ def main():
                         help="Scan for bearish/short setups in weak sectors")
     parser.add_argument("--no-notify",  action="store_true",
                         help="Skip Telegram notification (default: auto-send on completion)")
+    parser.add_argument("--timeframe",  type=str,  default="all",
+                        choices=["all", "daily", "weekly", "monthly"],
+                        help="Filter by timeframe: all (default), daily, weekly, monthly")
     args = parser.parse_args()
 
     print("=" * 70)
@@ -335,7 +369,7 @@ def main():
     for sym, df in price_cache.items():
         try:
             df_weekly = _resample_weekly(df)
-            result = _detect_pattern(df, df_weekly)
+            result = _detect_pattern(df, df_weekly, timeframe_filter=args.timeframe)
             if not result:
                 continue
             result = _add_targets(result)
@@ -363,6 +397,7 @@ def main():
             row = {
                 "symbol":         sym,
                 "pattern":        result.get("pattern"),
+                "timeframe":      result.get("timeframe", "Daily"),
                 "status":         result.get("status"),
                 "cmp":            round(cmp, 2),
                 "breakout":       round(result.get("breakout", 0), 2),
@@ -384,7 +419,7 @@ def main():
                 all_results.append(row)
             else:
                 results.append(row)
-            print(f"  {sym:<20} FOUND | {result.get('pattern')} | {result.get('status')} | "
+            print(f"  {sym:<20} FOUND | {result.get('pattern')} [{result.get('timeframe','Daily')}] | {result.get('status')} | "
                   f"score={score} | rr={rr} | SL={stop}")
         except Exception:
             continue
@@ -411,10 +446,11 @@ def main():
     print(f"  Top score    : {df_out['score'].iloc[0]} ({df_out['symbol'].iloc[0]})")
     print(f"{'='*70}")
     print(f"\n  TOP {len(df_out)} SETUPS")
-    print(f"  {'Symbol':<20} {'Pattern':<28} {'Score':>5} {'RR':>5} {'T1%':>7} {'SL%':>6} {'Status'}")
-    print("  " + "-"*88)
+    print(f"  {'Symbol':<20} {'Pattern':<28} {'TF':<8} {'Score':>5} {'RR':>5} {'T1%':>7} {'SL%':>6} {'Status'}")
+    print("  " + "-"*95)
     for _, row in df_out.iterrows():
-        print(f"  {row['symbol']:<20} {row['pattern']:<28} {row['score']:>5} "
+        tf = row.get('timeframe', 'Daily')
+        print(f"  {row['symbol']:<20} {row['pattern']:<28} {tf:<8} {row['score']:>5} "
               f"{row['rr']:>5} {row['upside_%']:>6}% {row['risk_%']:>5}%  {row['status']}")
 
     print(f"\n  Saved: {out_path}")

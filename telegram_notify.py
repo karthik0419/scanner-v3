@@ -113,6 +113,9 @@ def format_message(df, top):
             "━━━━━━━━━━━━━━━━━━━",
             f"{medal} <b>{sym}</b> | Score: {score} | {pat}",
         ]
+        tf = str(row.get("timeframe", ""))
+        if tf and tf not in ("", "nan"):
+            msg_lines.append(f"📅 Timeframe: {tf}")
         if sec_line: msg_lines.append(sec_line)
         if neck_line: msg_lines.append(neck_line)
         msg_lines += [
