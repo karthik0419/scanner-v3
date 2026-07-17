@@ -202,6 +202,6 @@ def detect_cup_handle_weekly(df_weekly):
         volume_lookback    = 52,                      # was 20 — 1-year baseline for weekly
     )
     if result:
-        result["pattern"]   = "Cup & Handle (Weekly)"
+        result["pattern"]   = "Cup & Handle"
         result["timeframe"] = "Weekly"
     return result

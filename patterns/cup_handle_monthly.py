@@ -24,6 +24,6 @@ def detect_cup_handle_monthly(df_monthly):
         min_bars       = 18,
     )
     if result:
-        result["pattern"]   = "Cup & Handle (Monthly)"
+        result["pattern"]   = "Cup & Handle"
         result["timeframe"] = "Monthly"
     return result

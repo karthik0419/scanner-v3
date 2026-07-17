@@ -41,22 +41,23 @@ MAX_HOLD_DAYS = 45  # v3: increased from 30 to 45 (swing trades need more room)
 
 
 # Pattern priority — matches scanner.py _detect_pattern
+# (label, detector, timeframe)
 DETECTORS = [
-    ("monthly_ch",  lambda df, dfw: detect_cup_handle_monthly(resample_monthly(df))),
-    ("weekly_ch",   lambda df, dfw: detect_cup_handle_weekly(dfw)),
-    ("daily_ch",    lambda df, dfw: detect_cup_handle(df)),
-    ("double_bot",  lambda df, dfw: detect_double_bottom(df)),
-    ("desc_channel",lambda df, dfw: detect_descending_channel(df)),
-    ("asc_channel", lambda df, dfw: detect_ascending_channel(df)),
-    ("triangle",    lambda df, dfw: detect_triangle(df)),
-    ("darvas",      lambda df, dfw: detect_darvas_box(df)),
-    ("flag",        lambda df, dfw: detect_flag_pennant(df)),
-    ("wedge",       lambda df, dfw: detect_descending_wedge(df)),
-    ("sr",          lambda df, dfw: detect_sr_levels(df)),
-    ("break_retest",lambda df, dfw: detect_break_retest(df)),
-    ("retest",      lambda df, dfw: detect_retest(df)),
-    ("compression", lambda df, dfw: detect_compression(df)),
-    ("breakout",    lambda df, dfw: detect_breakout(df)),
+    ("monthly_ch",  lambda df, dfw: detect_cup_handle_monthly(resample_monthly(df)), "Monthly"),
+    ("weekly_ch",   lambda df, dfw: detect_cup_handle_weekly(dfw),                   "Weekly"),
+    ("daily_ch",    lambda df, dfw: detect_cup_handle(df),                           "Daily"),
+    ("double_bot",  lambda df, dfw: detect_double_bottom(df),                        "Daily"),
+    ("desc_channel",lambda df, dfw: detect_descending_channel(df),                   "Daily"),
+    ("asc_channel", lambda df, dfw: detect_ascending_channel(df),                    "Daily"),
+    ("triangle",    lambda df, dfw: detect_triangle(df),                             "Daily"),
+    ("darvas",      lambda df, dfw: detect_darvas_box(df),                           "Daily"),
+    ("flag",        lambda df, dfw: detect_flag_pennant(df),                         "Daily"),
+    ("wedge",       lambda df, dfw: detect_descending_wedge(df),                     "Daily"),
+    ("sr",          lambda df, dfw: detect_sr_levels(df),                            "Daily"),
+    ("break_retest",lambda df, dfw: detect_break_retest(df),                         "Daily"),
+    ("retest",      lambda df, dfw: detect_retest(df),                               "Daily"),
+    ("compression", lambda df, dfw: detect_compression(df),                          "Daily"),
+    ("breakout",    lambda df, dfw: detect_breakout(df),                             "Daily"),
 ]
 
 
@@ -73,10 +74,11 @@ def _calc_atr(df, period=14):
 
 
 def _detect_signal(df_slice, df_weekly_slice):
-    for name, detect in DETECTORS:
+    for name, detect, timeframe in DETECTORS:
         try:
             result = detect(df_slice, df_weekly_slice)
             if result:
+                result["timeframe"] = timeframe
                 return result
         except Exception:
             continue
@@ -126,9 +128,11 @@ def _score(result):
     elif dist < 0.10: score += 6
 
     pat = result.get("pattern", "")
+    tf  = result.get("timeframe", "Daily")
+    pat_tf = f"{pat} [{tf}]" if "Cup & Handle" in pat else pat
     pat_bonus = {
-        "Cup & Handle (Monthly)":        30,
-        "Cup & Handle (Weekly)":         28,
+        "Cup & Handle [Monthly]":        30,
+        "Cup & Handle [Weekly]":         28,
         "Cup & Handle":                  20,
         "Double Bottom":                 28,
         "Ascending Triangle":            15,
@@ -144,7 +148,7 @@ def _score(result):
         "S&R Support":                   10,
         "Resistance Breakout":           10,
     }
-    score += pat_bonus.get(pat, 5)
+    score += pat_bonus.get(pat_tf, pat_bonus.get(pat, 5))
     normalised = round(min(score / 155 * 100, 100), 1)
     return normalised, round(rr, 2)
 
@@ -164,11 +168,12 @@ def _apply_atr_stop(result, df_slice, atr_multiplier=None):
     # (ATR stops reduced their win rate significantly in backtesting)
     KEEP_ORIGINAL_STOP = {
         "Cup & Handle":             True,   # handle low is structural — 48.9% WR vs 34.1% with ATR
-        "Cup & Handle (Weekly)":    True,
-        "Cup & Handle (Monthly)":   True,
         "Descending Wedge":         True,   # wedge low is structural — 28.6% WR vs 23.0% with ATR
         "Double Bottom":            False,  # ATR works fine — 56.6% WR
     }
+    # C&H on ALL timeframes keeps structural stops
+    if "Cup & Handle" in pat:
+        KEEP_ORIGINAL_STOP[pat] = True
 
     if KEEP_ORIGINAL_STOP.get(pat, False):
         # Keep the pattern's original stop loss (don't override with ATR)

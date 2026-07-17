@@ -198,9 +198,12 @@ def _score(result):
     # Cup & Handle: 42% win rate — kept at 20 (workhorse)
     # Cup & Handle (Weekly): 50% win rate in scanner/ — promoted from 25 to 28
     pat = result.get("pattern", "")
+    tf  = result.get("timeframe", "Daily")
+    # Lookup key combines pattern + timeframe for C&H (different bonuses per TF)
+    pat_tf = f"{pat} [{tf}]" if "Cup & Handle" in pat else pat
     pat_bonus = {
-        "Cup & Handle (Monthly)":        30,
-        "Cup & Handle (Weekly)":         28,   # promoted (was 25)
+        "Cup & Handle [Monthly]":        30,
+        "Cup & Handle [Weekly]":         28,   # promoted (was 25)
         "Cup & Handle":                  20,
         "Double Bottom":                 28,   # promoted (was 18) — 100% win rate
         "Ascending Triangle":            15,
@@ -216,7 +219,7 @@ def _score(result):
         "S&R Support":                   10,
         "Resistance Breakout":           10,
     }
-    score += pat_bonus.get(pat, 5)
+    score += pat_bonus.get(pat_tf, pat_bonus.get(pat, 5))
     # Normalise to 0-100 (max theoretical ~155)
     normalised = round(min(score / 155 * 100, 100), 1)
     return normalised, round(rr, 2)
@@ -237,10 +240,11 @@ def _apply_sl_mode(result, df, sl_mode):
     # (ATR stops reduced their win rate in backtesting)
     KEEP_ORIGINAL_STOP = {
         "Cup & Handle":             True,   # handle low is structural — 48.9% WR vs 34.1% with ATR
-        "Cup & Handle (Weekly)":    True,
-        "Cup & Handle (Monthly)":   True,
         "Descending Wedge":         True,   # wedge low is structural — 28.6% WR vs 23.0% with ATR
     }
+    # C&H on ALL timeframes keeps structural stops
+    if "Cup & Handle" in pat:
+        return result
 
     if KEEP_ORIGINAL_STOP.get(pat, False):
         return result  # keep original stop
