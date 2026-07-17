@@ -55,6 +55,9 @@ from patterns.compression        import detect_compression
 # Self-contained sector rotation (v3 — no external dependency)
 from utils.sector_rotation_v3 import get_sector_bonus, print_sector_heatmap, get_sector_heat
 
+# Telegram notification (auto-sends after scan completes)
+from telegram_notify import notify_scan_results
+
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
@@ -281,6 +284,8 @@ def main():
                         help="Maximum stock price filter (e.g. 400)")
     parser.add_argument("--bearish",    action="store_true",
                         help="Scan for bearish/short setups in weak sectors")
+    parser.add_argument("--no-notify",  action="store_true",
+                        help="Skip Telegram notification (default: auto-send on completion)")
     args = parser.parse_args()
 
     print("=" * 70)
@@ -414,6 +419,12 @@ def main():
 
     print(f"\n  Saved: {out_path}")
     print(f"{'='*70}\n")
+
+    # Auto-send to Telegram (unless --no-notify)
+    if not args.no_notify:
+        print("[Telegram] Notifying...")
+        notify_scan_results(csv_path=out_path, top=10, bearish=args.bearish)
+        print()
 
 
 if __name__ == "__main__":

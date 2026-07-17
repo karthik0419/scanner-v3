@@ -54,9 +54,7 @@ echo  [2/4] Generating charts for top picks...
 python gen_charts.py
 if errorlevel 1 echo  Chart generation failed (non-critical).
 echo.
-echo  [3/4] Sending Telegram notification...
-python telegram_notify.py
-if errorlevel 1 echo  Telegram failed (non-critical).
+echo  [3/4] Telegram notification sent automatically by scanner.
 echo.
 echo  [4/4] Opening results folder...
 start "" "results"
@@ -88,9 +86,7 @@ echo  [2/4] Generating charts for top picks...
 python gen_charts.py
 if errorlevel 1 echo  Chart generation failed (non-critical).
 echo.
-echo  [3/4] Sending Telegram notification...
-python telegram_notify.py
-if errorlevel 1 echo  Telegram failed (non-critical).
+echo  [3/4] Telegram notification sent automatically by scanner.
 echo.
 echo  [4/4] Opening results folder...
 start "" "results"
@@ -128,9 +124,7 @@ echo  [2/4] Generating charts for top picks...
 python gen_charts.py
 if errorlevel 1 echo  Chart generation failed (non-critical).
 echo.
-echo  [3/4] Sending Telegram notification...
-python telegram_notify.py
-if errorlevel 1 echo  Telegram failed (non-critical).
+echo  [3/4] Telegram notification sent automatically by scanner.
 echo.
 echo  [4/4] Opening results folder...
 start "" "results"

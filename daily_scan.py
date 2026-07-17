@@ -27,6 +27,9 @@ import yfinance as yf
 import pandas as pd
 from datetime import date
 
+# Telegram notification (auto-sends after scan completes)
+from telegram_notify import send_daily_summary
+
 # ── SECTOR INDICES (NSE) ────────────────────────────────────────────────────
 SECTOR_INDICES = {
     "METAL":   "^CNXMETAL",
@@ -286,6 +289,7 @@ def main():
     parser.add_argument("--min-price", type=float, default=None, help="Min stock price (e.g. 100)")
     parser.add_argument("--max-price", type=float, default=None, help="Max stock price (e.g. 400)")
     parser.add_argument("--bearish", action="store_true", help="Find weak sectors + short candidates")
+    parser.add_argument("--no-notify", action="store_true", help="Skip Telegram notification")
     args = parser.parse_args()
 
     today = date.today().strftime("%d-%b-%Y")
@@ -421,6 +425,36 @@ def main():
             print(f"\n  No significant volume surges today (threshold: {SURGE_THRESHOLD}x)")
 
     print()
+
+    # Auto-send daily summary to Telegram (unless --no-notify)
+    if not args.no_notify:
+        header = f"📊 DAILY SCAN — {date.today().strftime('%d %b %Y')}"
+        lines = []
+        if args.bearish:
+            lines.append("🔻 Mode: BEARISH (short candidates)")
+            lines.append(f"Weak sectors: {', '.join(hot_sectors)}")
+            bearish_picks = [r for r in sector_results if r["symbol"] in sector_syms]
+            bearish_picks.sort(key=lambda x: x["pct_chg"])
+            for r in bearish_picks[:5]:
+                lines.append(f"  {r['symbol']} | {r['pct_chg']}% | vol {r['vol_ratio']}x | CMP {r['close']}")
+        else:
+            lines.append(f"🔥 Hot sectors: {', '.join(hot_sectors)}")
+            if surges:
+                lines.append(f"\n📈 Top volume surges ({len(surges)}):")
+                for r in surges[:5]:
+                    lines.append(f"  {r['symbol']} | {r['vol_ratio']}x vol | {('+' if r['pct_chg']>=0 else '')}{r['pct_chg']}% | CMP {r['close']}")
+            else:
+                lines.append("\nNo significant volume surges today.")
+            # Top backbone movers
+            top_movers = [r for r in backbone_results if r["pct_chg"] >= 2 or r["vol_ratio"] >= SURGE_THRESHOLD]
+            top_movers.sort(key=lambda x: x["vol_ratio"], reverse=True)
+            if top_movers:
+                lines.append(f"\n💼 Top backbone movers:")
+                for r in top_movers[:5]:
+                    lines.append(f"  {r['symbol']} | {('+' if r['pct_chg']>=0 else '')}{r['pct_chg']}% | {r['vol_ratio']}x vol | CMP {r['close']}")
+        lines.append("\n⚠️ For research only. Not financial advice.")
+        send_daily_summary("\n".join(lines), header=header)
+        print()
 
 
 if __name__ == "__main__":
