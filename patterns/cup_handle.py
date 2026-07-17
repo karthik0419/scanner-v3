@@ -38,8 +38,14 @@ def _fit_neckline(cup_data):
 
 def _try_one_cup_length(df, cup_bars, handle_bars,
                         min_depth, max_depth, near_pct, near_pct_watch,
-                        max_slope_pct_per_bar):
-    """One attempt with a specific cup_bars. Returns (result_dict, fit_score) or (None, 0)."""
+                        max_slope_pct_per_bar,
+                        handle_depth_ratio=0.90, volume_lookback=20):
+    """One attempt with a specific cup_bars. Returns (result_dict, fit_score) or (None, 0).
+
+    handle_depth_ratio: max handle depth as fraction of cup depth (default 0.90).
+    volume_lookback: bars for average volume baseline (default 20).
+    Both parameterised so weekly can use stricter values without affecting daily/monthly.
+    """
     cup_bars = min(cup_bars, len(df) - handle_bars)
     if cup_bars < 15:
         return None, 0
@@ -76,7 +82,7 @@ def _try_one_cup_length(df, cup_bars, handle_bars,
         return None, 0
 
     handle_depth = (handle_high - handle_low) / cup_high
-    if handle_depth > cup_depth * 0.90:
+    if handle_depth > cup_depth * handle_depth_ratio:
         return None, 0
 
     if use_diagonal:
@@ -87,7 +93,7 @@ def _try_one_cup_length(df, cup_bars, handle_bars,
         breakout_level = max(right_high, handle_high)
 
     # Volume
-    avg_volume     = float(df['Volume'].tail(20).mean())
+    avg_volume     = float(df['Volume'].tail(volume_lookback).mean())
     current_volume = float(df['Volume'].iloc[-1])
     volume_ok      = current_volume > avg_volume * 1.2
 
@@ -143,7 +149,8 @@ def _try_one_cup_length(df, cup_bars, handle_bars,
 
 def _detect(df, cup_lengths, handle_bars, min_depth, max_depth,
             near_pct, near_pct_watch, min_bars,
-            max_slope_pct_per_bar=0.0005):
+            max_slope_pct_per_bar=0.0005,
+            handle_depth_ratio=0.90, volume_lookback=20):
     if df is None or len(df) < min_bars:
         return None
     best, best_score = None, -1
@@ -153,6 +160,7 @@ def _detect(df, cup_lengths, handle_bars, min_depth, max_depth,
             min_depth, max_depth,
             near_pct, near_pct_watch,
             max_slope_pct_per_bar,
+            handle_depth_ratio, volume_lookback,
         )
         if res and score > best_score:
             best, best_score = res, score
@@ -175,15 +183,23 @@ def detect_cup_handle(df):
 
 # ---------- Weekly ----------
 def detect_cup_handle_weekly(df_weekly):
+    # v3 fix: tightened params based on backtest showing -0.56% expectancy.
+    # Root cause: handle_bars=12 (3 months) allowed downtrends as "handles",
+    # near_pct=0.15/0.25 generated premature entries far from breakout,
+    # handle_depth_ratio=0.90 allowed handles as deep as the cup itself.
+    # Fix aligns with Bulkowski: 1-4 week handles, shallow pullbacks,
+    # tighter breakout proximity, 1-year volume baseline.
     result = _detect(
         df_weekly,
         cup_lengths    = [30, 45, 65, 90, 130],       # G3: sweep (up to ~30 months)
-        handle_bars    = 12,
+        handle_bars    = 4,                           # was 12 — 4 weeks per Bulkowski
         min_depth      = 0.15,
-        max_depth      = 0.90,
-        near_pct       = 0.15,
-        near_pct_watch = 0.25,
+        max_depth      = 0.50,                        # was 0.90 — filter V-shaped cups
+        near_pct       = 0.08,                        # was 0.15 — match daily tightness
+        near_pct_watch = 0.15,                        # was 0.25 — match daily
         min_bars       = 40,
+        handle_depth_ratio = 0.50,                    # was 0.90 — handle <= 50% of cup depth
+        volume_lookback    = 52,                      # was 20 — 1-year baseline for weekly
     )
     if result:
         result["pattern"]   = "Cup & Handle (Weekly)"
