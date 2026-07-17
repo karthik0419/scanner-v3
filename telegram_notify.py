@@ -109,13 +109,12 @@ def format_message(df, top):
         sec_line = f"🏭 {sector} {sec_icon} {signal}" if sector and sector not in ("","Unknown","nan") else ""
         neck_line = f"📐 Neckline: {neckline}" if neckline and neckline not in ("","nan") else ""
 
+        tf = str(row.get("timeframe", ""))
+        tf_label = f" [{tf}]" if tf and tf not in ("", "nan") else ""
         msg_lines = [
             "━━━━━━━━━━━━━━━━━━━",
-            f"{medal} <b>{sym}</b> | Score: {score} | {pat}",
+            f"{medal} <b>{sym}</b> | Score: {score} | {pat}{tf_label}",
         ]
-        tf = str(row.get("timeframe", ""))
-        if tf and tf not in ("", "nan"):
-            msg_lines.append(f"📅 Timeframe: {tf}")
         if sec_line: msg_lines.append(sec_line)
         if neck_line: msg_lines.append(neck_line)
         msg_lines += [
