@@ -5,11 +5,12 @@ Based on scanner/utils/sector_rotation.py but enhanced:
   - BOOM/RISING/COOLING/WEAK signals (same as v2)
   - Bearish mode: identifies WEAK sectors for short setups
   - NSE Heat Map integration: finds sectors with most selling pressure
-  - Larger stock→sector mapping
-  - Fallback to yfinance .info for unknown stocks
+  - Authoritative stock→sector mapping from NSE official index constituents
+  - Fallback to yfinance .info `industry` field for unknown stocks
 """
 import warnings
 warnings.filterwarnings("ignore")
+import os, json
 import yfinance as yf
 import pandas as pd
 
@@ -29,90 +30,133 @@ SECTOR_INDICES = {
     'PSU Bank':      '^CNXPSUBANK',
 }
 
-# Stock -> Sector mapping (expanded from scanner/)
-STOCK_SECTOR = {
-    # Banking
-    'HDFCBANK.NS':'Banking','ICICIBANK.NS':'Banking','SBIN.NS':'Banking',
-    'AXISBANK.NS':'Banking','KOTAKBANK.NS':'Banking','BAJFINANCE.NS':'Banking',
-    'PNB.NS':'Banking','BANKBARODA.NS':'Banking','FEDERALBNK.NS':'Banking',
-    'RBLBANK.NS':'Banking','INDUSINDBK.NS':'Banking','IDFCFIRSTB.NS':'Banking',
-    'BANDHANBNK.NS':'Banking','AUBANK.NS':'Banking','DCBBANK.NS':'Banking',
-    'KARURVYSYA.NS':'Banking','CUB.NS':'Banking','CANBK.NS':'Banking',
-    'J&KBANK.NS':'Banking','MAHABANK.NS':'Banking','BANKINDIA.NS':'Banking',
-    'SURYODAY.NS':'Banking','UTKARSHBNK.NS':'Banking','SHIVALIK.NS':'Banking',
-    'REPCAPITAL.NS':'Banking','SBICARD.NS':'Banking','BAJAJFINSV.NS':'Banking',
-    'LTF.NS':'Banking','INDIANB.NS':'Banking','UCOBANK.NS':'Banking',
-    # IT
-    'TCS.NS':'IT','INFY.NS':'IT','WIPRO.NS':'IT','HCLTECH.NS':'IT',
-    'TECHM.NS':'IT','MPHASIS.NS':'IT','LTIM.NS':'IT','PERSISTENT.NS':'IT',
-    'COFORGE.NS':'IT','KPITTECH.NS':'IT','OFSS.NS':'IT','NIITLTD.NS':'IT',
-    'MASTEK.NS':'IT','CYIENT.NS':'IT','BSOFT.NS':'IT','SONATSOFTW.NS':'IT',
-    'TANLA.NS':'IT','ROUTE.NS':'IT','CDSL.NS':'IT','BSE.NS':'IT',
-    'EASEMYTRIP.NS':'IT','LATENTVIEW.NS':'IT','INDIAMART.NS':'IT',
-    'INFIBEAM.NS':'IT','ZENSARTECH.NS':'IT','KELLTONTECH.NS':'IT',
-    # Pharma
-    'SUNPHARMA.NS':'Pharma','DRREDDY.NS':'Pharma','CIPLA.NS':'Pharma',
-    'LUPIN.NS':'Pharma','AUROPHARMA.NS':'Pharma','DIVISLAB.NS':'Pharma',
-    'NATCOPHARM.NS':'Pharma','LAURUSLABS.NS':'Pharma','HIKAL.NS':'Pharma',
-    'BIOCON.NS':'Pharma','ALKEM.NS':'Pharma','IPCALAB.NS':'Pharma',
-    'GLENMARK.NS':'Pharma','GRANULES.NS':'Pharma','SUVEN.NS':'Pharma',
-    'LAUREATE.NS':'Pharma','TORNTPHARM.NS':'Pharma','SYNGENE.NS':'Pharma',
-    'JBIL.NS':'Pharma','MARKSANS.NS':'Pharma','AJANTPHARM.NS':'Pharma',
-    'ORCHPHARMA.NS':'Pharma','ACUTAAS.NS':'Pharma','ROSSARI.NS':'Pharma',
-    # Auto
-    'TATAMOTORS.NS':'Auto','MARUTI.NS':'Auto','M&M.NS':'Auto',
-    'BAJAJ-AUTO.NS':'Auto','HEROMOTOCO.NS':'Auto','EICHERMOT.NS':'Auto',
-    'MOTHERSON.NS':'Auto','BHARATFORG.NS':'Auto','SONACOMS.NS':'Auto',
-    'TVSMOTOR.NS':'Auto','ASHOKLEY.NS':'Auto','BOSCHLTD.NS':'Auto',
-    'BALKRISIND.NS':'Auto','MRF.NS':'Auto','TIINDIA.NS':'Auto',
-    'APOLLOTYRE.NS':'Auto','CRAFTSMAN.NS':'Auto','ENDURANCE.NS':'Auto',
-    'SAMVARDHANA.NS':'Auto','UNO MINDA.NS':'Auto','UNOMINDA.NS':'Auto',
-    # Metals
-    'TATASTEEL.NS':'Metals','JSWSTEEL.NS':'Metals','HINDALCO.NS':'Metals',
-    'VEDL.NS':'Metals','COALINDIA.NS':'Metals','NMDC.NS':'Metals',
-    'SAIL.NS':'Metals','JINDALSTEL.NS':'Metals','HINDZINC.NS':'Metals',
-    'NATIONALUM.NS':'Metals','RATNAMANI.NS':'Metals','MOIL.NS':'Metals',
-    'WELCORP.NS':'Metals','HINDCOPPER.NS':'Metals','SHYAMMETL.NS':'Metals',
-    'APL.NS':'Metals','GALLANTT.NS':'Metals','APLAPOLLO.NS':'Metals',
-    'RATNAMANI.NS':'Metals','JSL.NS':'Metals','APLAPOLLO.NS':'Metals',
-    # FMCG
-    'ITC.NS':'FMCG','HINDUNILVR.NS':'FMCG','NESTLEIND.NS':'FMCG',
-    'DABUR.NS':'FMCG','GODREJCP.NS':'FMCG','MARICO.NS':'FMCG',
-    'BRITANNIA.NS':'FMCG','COLPAL.NS':'FMCG','EMAMILTD.NS':'FMCG',
-    'TATACONSUM.NS':'FMCG','VBL.NS':'FMCG','RADICO.NS':'FMCG',
-    'MCDOWELL-N.NS':'FMCG','UNITEDSPIRIT.NS':'FMCG','GILLETTE.NS':'FMCG',
-    'BAJAJELEC.NS':'FMCG','HAVELLS.NS':'FMCG','VOLTAS.NS':'FMCG',
-    # Energy
-    'RELIANCE.NS':'Energy','ONGC.NS':'Energy','BPCL.NS':'Energy',
-    'HINDPETRO.NS':'Energy','GAIL.NS':'Energy','NTPC.NS':'Energy',
-    'POWERGRID.NS':'Energy','TATAPOWER.NS':'Energy','ADANIGREEN.NS':'Energy',
-    'TORNTPOWER.NS':'Energy','SUZLON.NS':'Energy','CESC.NS':'Energy',
-    'SJVN.NS':'Energy','NHPC.NS':'Energy','ADANIPOWER.NS':'Energy',
-    'JSWENERGY.NS':'Energy','GUVNL.NS':'Energy','IREDA.NS':'Energy',
-    # Infra / Capital Goods
-    'LT.NS':'Infra','SIEMENS.NS':'Infra','ABB.NS':'Infra',
-    'CUMMINSIND.NS':'Infra','THERMAX.NS':'Infra','BHEL.NS':'Infra',
-    'DEEPINDS.NS':'Infra','KIRLOSENG.NS':'Infra','GREAVESCOT.NS':'Infra',
-    'APARINDS.NS':'Infra','TIMKEN.NS':'Infra','KPIL.NS':'Infra',
-    'KALPATPOWR.NS':'Infra','POWERINDIA.NS':'Infra','GVT&D.NS':'Infra',
-    'ULTRACEMCO.NS':'Infra','GRASIM.NS':'Infra','ADANIPORTS.NS':'Infra',
-    'BHARTIARTL.NS':'Infra','CONCOR.NS':'Infra','GMRINFRA.NS':'Infra',
-    'IRB.NS':'Infra','NBCC.NS':'Infra','NCC.NS':'Infra','TECHNO.NS':'Infra',
-    'POLYCAB.NS':'Infra','KEI.NS':'Infra','RITES.NS':'Infra',
-    'RAILTEL.NS':'Infra','IRCON.NS':'Infra','RVNL.NS':'Infra',
-    'AFCONS.NS':'Infra','HGINFRA.NS':'Infra','PNCINFRA.NS':'Infra',
-    # Realty
-    'GODREJPROP.NS':'Realty','OBEROIRLTY.NS':'Realty','DLF.NS':'Realty',
-    'PHOENIXLTD.NS':'Realty','PRESTIGE.NS':'Realty','SOBHA.NS':'Realty',
-    'BRIGADE.NS':'Realty','KOLTEPATIL.NS':'Realty','SUNTECK.NS':'Realty',
-    'LODHA.NS':'Realty','SIGNATURE.NS':'Realty','MAHINDCIE.NS':'Realty',
-    # Defence / Aerospace
-    'ASTRAMICRO.NS':'Defence','CENTUM.NS':'Defence','HAL.NS':'Defence',
-    'BEL.NS':'Defence','BDL.NS':'Defence','MAZDOCK.NS':'Defence',
-    'COSHAL.NS':'Defence','AZAD.NS':'Defence',
+# Load authoritative NSE sector mapping (built by utils/build_sector_map.py)
+_NSE_SECTORS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "nse_sectors.json")
+_NSE_SECTORS_PATH = os.path.abspath(_NSE_SECTORS_PATH)
+STOCK_SECTOR = {}  # Loaded from JSON at module init
+
+def _load_nse_sectors():
+    """Load NSE official sector mapping from JSON file."""
+    global STOCK_SECTOR
+    try:
+        with open(_NSE_SECTORS_PATH) as f:
+            raw = json.load(f)
+        # Store with .NS suffix for consistency with scanner symbols
+        STOCK_SECTOR = {f"{sym}.NS": sector for sym, sector in raw.items()}
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass  # Will fall back to yfinance
+
+_load_nse_sectors()
+
+# yfinance `industry` field -> Scanner Sector (granular fallback)
+YF_INDUSTRY_TO_SECTOR = {
+    'Banks - Regional':                      'Banking',
+    'Banks - Diversified':                   'Banking',
+    'Capital Markets':                       'Banking',
+    'Credit Services':                       'Banking',
+    'Asset Management':                      'Banking',
+    'Insurance - Diversified':               'Banking',
+    'Insurance - Life':                      'Banking',
+    'Financial Data & Stock Exchanges':      'Banking',
+    'Financial Conglomerates':               'Banking',
+    'Information Technology Services':       'IT',
+    'Software - Infrastructure':             'IT',
+    'Software - Application':                'IT',
+    'Software - Services':                   'IT',
+    'Communication Equipment':               'Telecom',
+    'Electronic Components':                 'IT',
+    'Semiconductors':                        'IT',
+    'Computer Hardware':                     'IT',
+    'Electronics & Computer Distribution':   'IT',
+    'Drug Manufacturers - General':          'Pharma',
+    'Drug Manufacturers - Specialty & Generic': 'Pharma',
+    'Biotechnology':                         'Pharma',
+    'Medical Devices':                       'Pharma',
+    'Healthcare Information Services':        'Pharma',
+    'Medical Care Facilities':               'Pharma',
+    'Medical Instruments & Supplies':        'Pharma',
+    'Diagnostics & Research':                'Pharma',
+    'Auto Manufacturers':                    'Auto',
+    'Auto Parts':                            'Auto',
+    'Auto Parts & Equipment':                'Auto',
+    'Rubber & Tires':                        'Auto',
+    'Recreational Vehicles':                 'Auto',
+    'Trucking':                              'Auto',
+    'Steel':                                 'Metals',
+    'Aluminum':                              'Metals',
+    'Copper':                                'Metals',
+    'Other Industrial Metals & Mining':      'Metals',
+    'Gold':                                  'Metals',
+    'Silver':                                'Metals',
+    'Other Precious Metals & Mining':        'Metals',
+    'Metal Fabrication':                     'Metals',
+    'Oil & Gas E&P':                         'Energy',
+    'Oil & Gas Integrated':                  'Energy',
+    'Oil & Gas Midstream':                   'Energy',
+    'Oil & Gas Refining & Marketing':        'Energy',
+    'Oil & Gas Equipment & Services':        'Energy',
+    'Utilities - Regulated Electric':        'Energy',
+    'Utilities - Regulated Gas':             'Energy',
+    'Utilities - Renewable':                 'Energy',
+    'Solar':                                 'Energy',
+    'Wind':                                  'Energy',
+    'Utilities - Diversified':               'Energy',
+    'Utilities - Independent Power Producers': 'Energy',
+    'Packaged Foods':                        'FMCG',
+    'Beverages - Non-Alcoholic':             'FMCG',
+    'Beverages - Brewers':                   'FMCG',
+    'Beverages - Wineries & Distilleries':    'FMCG',
+    'Confectioners':                         'FMCG',
+    'Farm Products':                         'FMCG',
+    'Household & Personal Products':         'FMCG',
+    'Personal Services':                     'FMCG',
+    'Tobacco':                               'FMCG',
+    'Engineering - Construction':            'Infra',
+    'Infrastructure Operations':             'Infra',
+    'Building Materials':                    'Infra',
+    'Cement':                                'Infra',
+    'Specialty Industrial Machinery':        'Infra',
+    'General Industrial Machinery':          'Infra',
+    'Electrical Equipment & Parts':          'Infra',
+    'Heavy Machinery':                       'Infra',
+    'Industrial Distribution':               'Infra',
+    'Rental & Leasing Services':             'Infra',
+    'Aerospace & Defense':                   'Infra',
+    'Specialty Business Services':           'Infra',
+    'Real Estate - Development':             'Realty',
+    'Real Estate Services':                  'Realty',
+    'Real Estate - Diversified':             'Realty',
+    'REITs':                                 'Realty',
+    'Broadcasting':                          'Media',
+    'Entertainment':                         'Media',
+    'Media - Diversified':                   'Media',
+    'Advertising Agencies':                  'Media',
+    'Publishing':                            'Media',
+    'Advertising & Marketing Services':      'Media',
+    'Telecom Services':                      'Telecom',
+    'Wireless Communication':                'Telecom',
+    'Textile Manufacturing':                 'Textiles',
+    'Apparel Manufacturing':                 'Textiles',
+    'Apparel Retail':                        'Textiles',
+    'Footwear & Accessories':                'Textiles',
+    'Specialty Chemicals':                   'Chemicals',
+    'Agricultural Inputs':                   'Chemicals',
+    'Chemicals':                             'Chemicals',
+    'Fertilizers':                           'Chemicals',
+    'Pesticides':                            'Chemicals',
+    'Furnishings, Fixtures & Appliances':    'Consumer Durables',
+    'Consumer Electronics':                  'Consumer Durables',
+    'Luxury Goods':                          'Consumer Durables',
+    'Restaurants':                           'Services',
+    'Travel Services':                       'Services',
+    'Specialty Retail':                      'Services',
+    'Department Stores':                     'Services',
+    'Internet Retail':                       'Services',
+    'Discount Stores':                       'Services',
+    'Conglomerates':                         'Diversified',
 }
 
-# NSE sector -> rotation sector mapping (yfinance fallback)
+# Legacy yfinance `sector` field -> Scanner Sector (coarse, last resort)
 YF_SECTOR_MAP = {
     'Basic Materials':          'Metals',
     'Consumer Cyclical':        'Auto',
@@ -184,12 +228,20 @@ def get_sector_heat(lookback_short=5, lookback_long=20):
 
 
 def get_stock_sector(symbol):
-    """Return sector name. Checks hardcoded map first, then yfinance as fallback."""
+    """Return sector name.
+
+    Lookup priority:
+      1. NSE official sector map (data/nse_sectors.json — 568+ stocks)
+      2. Session cache (from previous yfinance lookups)
+      3. yfinance `industry` field (granular — e.g. "Textile Manufacturing")
+      4. yfinance `sector` field (coarse — e.g. "Consumer Cyclical")
+      5. 'Unknown'
+    """
     global _sector_lookup_cache
     sym_ns  = symbol if symbol.endswith('.NS') else symbol + '.NS'
     sym_raw = symbol.replace('.NS','')
 
-    # 1. Hardcoded map (instant)
+    # 1. NSE official sector map (instant — loaded from JSON at module init)
     sec = STOCK_SECTOR.get(sym_ns) or STOCK_SECTOR.get(sym_raw)
     if sec:
         return sec
@@ -198,11 +250,19 @@ def get_stock_sector(symbol):
     if sym_ns in _sector_lookup_cache:
         return _sector_lookup_cache[sym_ns]
 
-    # 3. yfinance info (slow but accurate — cached after first call)
+    # 3. yfinance `industry` field (granular fallback)
     try:
         import contextlib, io
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             info = yf.Ticker(sym_ns).info
+        # Try industry first (more granular)
+        yf_industry = info.get('industry', '')
+        if yf_industry:
+            mapped = YF_INDUSTRY_TO_SECTOR.get(yf_industry)
+            if mapped:
+                _sector_lookup_cache[sym_ns] = mapped
+                return mapped
+        # Fall back to coarse sector
         yf_sector = info.get('sector', '')
         mapped = YF_SECTOR_MAP.get(yf_sector, yf_sector or 'Unknown')
         _sector_lookup_cache[sym_ns] = mapped
