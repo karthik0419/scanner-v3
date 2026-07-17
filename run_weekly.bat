@@ -16,11 +16,14 @@ echo   2.  Full scan + price filter (100-400 Rs)
 echo   3.  Full scan + custom price range
 echo   4.  Full scan + bearish mode (short setups)
 echo   5.  Quick test (50 stocks only)
-echo   6.  Backtest v3 vs v2 comparison
-echo   7.  Backtest v3 only
-echo   8.  Exit
+echo   6.  Backtest v3 vs v2 comparison (backbone50, in-sample)
+echo   7.  Backtest v3 vs v2 comparison (nifty200, out-of-sample)
+echo   8.  Backtest v3 only
+echo   9.  Paper tracker - update prices + show status
+echo  10.  Paper tracker - initialize from latest scan
+echo  11.  Exit
 echo.
-set /p choice="  Enter choice [1-8]: "
+set /p choice="  Enter choice [1-11]: "
 
 if "%choice%"=="1" goto FULL_SCAN
 if "%choice%"=="2" goto PRICE_FILTER
@@ -28,8 +31,11 @@ if "%choice%"=="3" goto CUSTOM_PRICE
 if "%choice%"=="4" goto BEARISH
 if "%choice%"=="5" goto TEST_MODE
 if "%choice%"=="6" goto BACKTEST_COMPARE
-if "%choice%"=="7" goto BACKTEST_V3
-if "%choice%"=="8" exit /b 0
+if "%choice%"=="7" goto BACKTEST_NIFTY200
+if "%choice%"=="8" goto BACKTEST_V3
+if "%choice%"=="9" goto PAPER_UPDATE
+if "%choice%"=="10" goto PAPER_INIT
+if "%choice%"=="11" exit /b 0
 echo  Invalid choice.
 pause
 goto MENU
@@ -205,6 +211,28 @@ echo.
 pause
 goto MENU
 
+:BACKTEST_NIFTY200
+cls
+echo.
+echo  ================================================================
+echo    BACKTEST - v3 vs v2 Comparison (Nifty 200, Out-of-Sample)
+echo  ================================================================
+echo.
+echo  Runs walk-forward backtest on nifty200 stocks (2 years).
+echo  This is the OUT-OF-SAMPLE test — validates that fixes
+echo  generalize beyond the backbone50 in-sample dataset.
+echo  Takes about 15-25 minutes (200 stocks x 2 modes).
+echo.
+set /p btconfirm="  Start backtest? [y/n]: "
+if /i not "%btconfirm%"=="y" goto MENU
+echo.
+python compare_backtest.py --stocks nifty200.txt --years 2 --min-score 40
+echo.
+echo  Results saved to: results\backtest_v3.csv and results\backtest_v2.csv
+echo.
+pause
+goto MENU
+
 :BACKTEST_V3
 cls
 echo.
@@ -222,6 +250,41 @@ echo.
 python backtest.py --stocks backbone50.txt --years 2 --min-score 40 --output results/backtest_v3_only.csv
 echo.
 echo  Results saved to: results\backtest_v3_only.csv
+echo.
+pause
+goto MENU
+
+:PAPER_UPDATE
+cls
+echo.
+echo  ================================================================
+echo    PAPER TRACKER - Update Prices + Show Status
+echo  ================================================================
+echo.
+echo  Fetches current prices for all open paper trades and shows
+echo  full status (open trades, closed trades, win rate, expectancy).
+echo.
+python paper_tracker.py update
+echo.
+python paper_tracker.py status
+echo.
+pause
+goto MENU
+
+:PAPER_INIT
+cls
+echo.
+echo  ================================================================
+echo    PAPER TRACKER - Initialize from Latest Scan
+echo  ================================================================
+echo.
+echo  Creates a new paper tracker from the latest scan results CSV.
+echo  This will REPLACE any existing tracker.
+echo.
+set /p ptconfirm="  Initialize tracker? This replaces existing data. [y/n]: "
+if /i not "%ptconfirm%"=="y" goto MENU
+echo.
+python paper_tracker.py init
 echo.
 pause
 goto MENU

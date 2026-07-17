@@ -11,23 +11,29 @@ echo  ================================================================
 echo                   SCANNER v3 - DAILY MORNING
 echo  ================================================================
 echo.
-echo   1.  Daily scan (auto-detect hot sectors, top 15)
-echo   2.  Daily scan + price filter (100-400 Rs)
-echo   3.  Daily scan + custom price range
-echo   4.  Daily scan + custom sector
-echo   5.  Daily bearish scan (weak sectors + short candidates)
-echo   6.  Sector rotation heatmap only
-echo   7.  Exit
+echo   1.  Daily scan - Smart universe (auto hot sectors, ~600-800 stocks)
+echo   2.  Daily scan - Full NSE EQ universe (~2000+ stocks, slower)
+echo   3.  Daily scan + price filter (100-400 Rs)
+echo   4.  Daily scan + custom price range
+echo   5.  Daily scan + custom sector
+echo   6.  Daily bearish scan (weak sectors + short candidates)
+echo   7.  Sector rotation heatmap only
+echo   8.  Paper tracker - update prices + show status
+echo   9.  Paper tracker - initialize from latest scan
+echo  10.  Exit
 echo.
-set /p choice="  Enter choice [1-7]: "
+set /p choice="  Enter choice [1-10]: "
 
 if "%choice%"=="1" goto DAILY_DEFAULT
-if "%choice%"=="2" goto DAILY_PRICE
-if "%choice%"=="3" goto DAILY_CUSTOM_PRICE
-if "%choice%"=="4" goto DAILY_SECTOR
-if "%choice%"=="5" goto DAILY_BEARISH
-if "%choice%"=="6" goto SECTOR_HEAT
-if "%choice%"=="7" exit /b 0
+if "%choice%"=="2" goto DAILY_FULL
+if "%choice%"=="3" goto DAILY_PRICE
+if "%choice%"=="4" goto DAILY_CUSTOM_PRICE
+if "%choice%"=="5" goto DAILY_SECTOR
+if "%choice%"=="6" goto DAILY_BEARISH
+if "%choice%"=="7" goto SECTOR_HEAT
+if "%choice%"=="8" goto PAPER_UPDATE
+if "%choice%"=="9" goto PAPER_INIT
+if "%choice%"=="10" exit /b 0
 echo  Invalid choice.
 pause
 goto MENU
@@ -36,10 +42,29 @@ goto MENU
 cls
 echo.
 echo  ================================================================
-echo    DAILY SCAN - Auto-detect hot sectors, top 15
+echo    DAILY SCAN - Smart universe (auto hot sectors, ~600-800 stocks)
 echo  ================================================================
 echo.
+echo  Scans: Backbone 50 + Nifty 500 + weekly picks + ALL stocks in
+echo  today's hot sectors (from NSE sector map). ~3-5 min with 8 threads.
+echo  Telegram sent automatically on completion.
+echo.
 python daily_scan.py --top 15
+echo.
+pause
+goto MENU
+
+:DAILY_FULL
+cls
+echo.
+echo  ================================================================
+echo    DAILY SCAN - Full NSE EQ universe (~2000+ stocks)
+echo  ================================================================
+echo.
+echo  Scans ALL NSE EQ stocks. Catches everything but takes ~10-15 min.
+echo  Telegram sent automatically on completion.
+echo.
+python daily_scan.py --top 15 --full --workers 10
 echo.
 pause
 goto MENU
@@ -83,6 +108,8 @@ echo  ================================================================
 echo.
 echo  Available sectors: METAL AUTO BANK IT PHARMA FMCG
 echo                     ENERGY INFRA REALTY MEDIA PSU
+echo                     CHEMICALS TEXTILES TELECOM CONSUMER
+echo                     HEALTHCARE DIVERSIFIED SERVICES
 echo.
 set /p sector="  Enter sector name: "
 echo.
@@ -104,6 +131,41 @@ echo  Finds the weakest NSE sectors (most selling pressure)
 echo  and flags stocks with biggest drops + volume surges.
 echo.
 python daily_scan.py --bearish --top 15
+echo.
+pause
+goto MENU
+
+:PAPER_UPDATE
+cls
+echo.
+echo  ================================================================
+echo    PAPER TRACKER - Update Prices + Show Status
+echo  ================================================================
+echo.
+echo  Fetches current prices for all open paper trades and shows
+echo  full status (open trades, closed trades, win rate, expectancy).
+echo.
+python paper_tracker.py update
+echo.
+python paper_tracker.py status
+echo.
+pause
+goto MENU
+
+:PAPER_INIT
+cls
+echo.
+echo  ================================================================
+echo    PAPER TRACKER - Initialize from Latest Scan
+echo  ================================================================
+echo.
+echo  Creates a new paper tracker from the latest scan results CSV.
+echo  This will REPLACE any existing tracker.
+echo.
+set /p ptconfirm="  Initialize tracker? This replaces existing data. [y/n]: "
+if /i not "%ptconfirm%"=="y" goto MENU
+echo.
+python paper_tracker.py init
 echo.
 pause
 goto MENU
