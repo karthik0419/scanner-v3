@@ -324,7 +324,14 @@ def get_sector_performance():
 
 
 def get_price_info(symbol):
-    """Fetch last close, volume, 20d avg volume."""
+    """Fetch last close, volume, 20d avg volume, + compute trade plan (entry/SL/target/RR).
+
+    Trade plan logic:
+    - Entry: current close (for BREAKOUT) or today's high (for WATCH — buy on breakout)
+    - Stop loss: max(today's low, close - 1.5*ATR) — structural + ATR hybrid
+    - Target: entry + 2 * (entry - stop) — 2:1 R:R minimum
+    - R:R: (target - entry) / (entry - stop)
+    """
     sym_ns = symbol + ".NS" if not symbol.endswith(".NS") else symbol
     try:
         hist = yf.Ticker(sym_ns).history(period="30d", auto_adjust=False)
@@ -339,6 +346,37 @@ def get_price_info(symbol):
         prev_close = float(hist["Close"].iloc[-2])
         pct_chg    = round((cur_close - prev_close) / prev_close * 100, 2)
         vol_ratio  = round(cur_vol / avg_vol, 1) if avg_vol > 0 else 0
+
+        # Today's high/low for structural stop
+        today_high = float(hist["High"].iloc[-1])
+        today_low  = float(hist["Low"].iloc[-1])
+
+        # 14-day ATR for volatility-based stop
+        atr = 0.0
+        if len(hist) >= 15:
+            tr_values = []
+            for i in range(1, min(15, len(hist))):
+                h  = float(hist["High"].iloc[i])
+                l  = float(hist["Low"].iloc[i])
+                pc = float(hist["Close"].iloc[i-1])
+                tr = max(h - l, abs(h - pc), abs(l - pc))
+                tr_values.append(tr)
+            atr = sum(tr_values) / len(tr_values) if tr_values else 0.0
+
+        # ── Trade plan ──
+        # Entry: current close (you'd enter at market on breakout confirmation)
+        entry = cur_close
+        # Stop: structural (today's low) or ATR-based (close - 1.5*ATR), whichever is tighter
+        stop_atr   = cur_close - 1.5 * atr if atr > 0 else cur_close * 0.95
+        stop_struct = today_low
+        stop = max(stop_struct, stop_atr)  # tighter stop = less risk
+        if stop >= entry:  # edge case: stock already below stop
+            stop = entry * 0.97
+        # Target: 2:1 R:R
+        risk   = entry - stop
+        target = entry + 2 * risk
+        rr     = round((target - entry) / risk, 1) if risk > 0 else 0
+
         return {
             "symbol":    symbol,
             "close":     round(cur_close, 2),
@@ -346,6 +384,15 @@ def get_price_info(symbol):
             "vol_ratio": vol_ratio,
             "avg_vol":   round(avg_vol / 1e5, 1),   # in lakhs
             "cur_vol":   round(cur_vol / 1e5, 1),
+            # Trade plan
+            "entry":     round(entry, 2),
+            "stop":      round(stop, 2),
+            "target":    round(target, 2),
+            "rr":        rr,
+            "risk_pct":  round(risk / entry * 100, 1) if entry > 0 else 0,
+            "today_high": round(today_high, 2),
+            "today_low":  round(today_low, 2),
+            "atr":        round(atr, 2),
         }
     except Exception:
         return None
@@ -460,6 +507,26 @@ def _categorize_pick(r):
     return "FLAT"
 
 
+def _fmt_pick(r, show_plan=True):
+    """Format a stock pick for Telegram. Includes trade plan if available.
+
+    Example: CAMPUS | +4.11% | 177.8x vol | Entry 236 SL 225 Target 257 R:R 2.0
+    """
+    sym = _normalize_symbol(r["symbol"])
+    pct = r["pct_chg"]
+    pct_str = ('+' if pct >= 0 else '') + str(pct) + '%'
+    vol_str = str(r['vol_ratio']) + 'x vol'
+
+    if show_plan and "entry" in r and "stop" in r and "target" in r:
+        rr = r.get("rr", 0)
+        risk = r.get("risk_pct", 0)
+        return (f"  {sym} | {pct_str} | {vol_str} | "
+                f"Entry {r['entry']} SL {r['stop']} Target {r['target']} "
+                f"R:R {rr} (risk {risk}%)")
+    else:
+        return f"  {sym} | {pct_str} | {vol_str} | CMP {r['close']}"
+
+
 def _build_telegram_summary(args, hot_sectors, sector_perf, surges,
                             backbone_results, all_results,
                             sector_results, sector_syms):
@@ -539,37 +606,31 @@ def _build_telegram_summary(args, hot_sectors, sector_perf, surges,
         if shorts:
             lines.append(f"\n🔻 SHORT — strong selling + volume ({len(shorts)}):")
             for r in shorts[:5]:
-                sym = _normalize_symbol(r["symbol"])
-                lines.append(f"  {sym} | {r['pct_chg']}% | {r['vol_ratio']}x vol | CMP {r['close']}")
+                lines.append(_fmt_pick(r))
         if watches:
             lines.append(f"\n👀 WATCH — weak but no volume confirm ({len(watches)}):")
             for r in watches[:5]:
-                sym = _normalize_symbol(r["symbol"])
-                lines.append(f"  {sym} | {r['pct_chg']}% | {r['vol_ratio']}x vol | CMP {r['close']}")
+                lines.append(_fmt_pick(r, show_plan=False))
         if not shorts and not watches:
             lines.append("\nNo bearish candidates in weak sectors today.")
     else:
-        # Bullish mode: show actionable categories
+        # Bullish mode: show actionable categories with trade plans
         if cats["BREAKOUT"]:
             lines.append(f"\n🟢 BREAKOUT — investigate for entry ({len(cats['BREAKOUT'])}):")
             for r in cats["BREAKOUT"][:5]:
-                sym = _normalize_symbol(r["symbol"])
-                lines.append(f"  {sym} | +{r['pct_chg']}% | {r['vol_ratio']}x vol | CMP {r['close']}")
+                lines.append(_fmt_pick(r))
         if cats["WATCH"]:
             lines.append(f"\n👀 WATCH — volume spike, no direction ({len(cats['WATCH'])}):")
             for r in cats["WATCH"][:3]:
-                sym = _normalize_symbol(r["symbol"])
-                lines.append(f"  {sym} | {('+' if r['pct_chg']>=0 else '')}{r['pct_chg']}% | {r['vol_ratio']}x vol | CMP {r['close']}")
+                lines.append(_fmt_pick(r))
         if cats["BREAKDOWN"]:
             lines.append(f"\n🔴 BREAKDOWN — avoid these ({len(cats['BREAKDOWN'])}):")
             for r in cats["BREAKDOWN"][:3]:
-                sym = _normalize_symbol(r["symbol"])
-                lines.append(f"  {sym} | {r['pct_chg']}% | {r['vol_ratio']}x vol | CMP {r['close']}")
+                lines.append(_fmt_pick(r, show_plan=False))
         if cats["MISSED_UP"]:
             lines.append(f"\n⏭️ MISSED — already moved >10% ({len(cats['MISSED_UP'])}):")
             for r in cats["MISSED_UP"][:3]:
-                sym = _normalize_symbol(r["symbol"])
-                lines.append(f"  {sym} | +{r['pct_chg']}% | {r['vol_ratio']}x vol | CMP {r['close']}")
+                lines.append(_fmt_pick(r, show_plan=False))
 
         # Backbone movers (curated watchlist)
         bb_movers = [r for r in backbone_results
@@ -586,8 +647,7 @@ def _build_telegram_summary(args, hot_sectors, sector_perf, surges,
         if bb_deduped:
             lines.append(f"\n💼 Backbone movers ({len(bb_deduped)}):")
             for r in bb_deduped[:5]:
-                sym = _normalize_symbol(r["symbol"])
-                lines.append(f"  {sym} | {('+' if r['pct_chg']>=0 else '')}{r['pct_chg']}% | {r['vol_ratio']}x vol | CMP {r['close']}")
+                lines.append(_fmt_pick(r))
 
     # ── Next action ──
     lines.append("")
