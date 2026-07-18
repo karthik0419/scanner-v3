@@ -820,7 +820,7 @@ def main():
 
     # Auto-send daily summary to Telegram (unless --no-notify)
     if not args.no_notify:
-        header = f"📊 DAILY SCAN — {date.today().strftime('%d %b %Y')}"
+        header = f"📊 [V3] DAILY SCAN — {date.today().strftime('%d %b %Y')}"
         lines = _build_telegram_summary(
             args, hot_sectors, sector_perf, surges, backbone_results,
             all_results, sector_results, sector_syms

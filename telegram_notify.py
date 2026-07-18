@@ -85,7 +85,7 @@ def format_message(df, top):
     medals = ["🥇", "🥈", "🥉"] + [f"{i+1}⃣" for i in range(3, top)]
 
     lines = [
-        f"<b>📊 WEEKLY SWING SCAN — {date.today().strftime('%d %b %Y')}</b>",
+        f"<b>📊 [V3] WEEKLY SWING SCAN — {date.today().strftime('%d %b %Y')}</b>",
         f"🔍 Scanned: Full NSE EQ (~2000+ stocks) | Found: {len(df)} setups",
         "",
     ]
