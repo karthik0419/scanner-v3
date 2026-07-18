@@ -394,6 +394,177 @@ def print_results(results, title, top=15):
         print("  No data available.")
 
 
+def _normalize_symbol(sym):
+    """Strip .NS suffix for consistent dedup."""
+    return sym.replace(".NS", "").strip()
+
+
+def _categorize_pick(r):
+    """Classify a stock by price action + volume into an actionable category.
+
+    Returns one of: BREAKOUT, BREAKDOWN, MISSED_UP, MISSED_DOWN, WATCH, FLAT
+    """
+    pct = r["pct_chg"]
+    vr  = r["vol_ratio"]
+    if pct >= 10 and vr >= SURGE_THRESHOLD:
+        return "MISSED_UP"      # already pumped — too late to enter
+    if pct <= -10 and vr >= SURGE_THRESHOLD:
+        return "MISSED_DOWN"    # already dumped — too late to short
+    if pct >= 3 and vr >= SURGE_THRESHOLD:
+        return "BREAKOUT"       # strong up move + volume — investigate
+    if pct <= -3 and vr >= SURGE_THRESHOLD:
+        return "BREAKDOWN"      # strong down move + volume — avoid/short
+    if vr >= SURGE_THRESHOLD:
+        return "WATCH"          # volume spike without clear direction
+    if pct >= 3:
+        return "FLAT_VOL_UP"    # up move but no volume confirmation
+    return "FLAT"
+
+
+def _build_telegram_summary(args, hot_sectors, sector_perf, surges,
+                            backbone_results, all_results,
+                            sector_results, sector_syms):
+    """Build a clean, actionable Telegram summary.
+
+    Fixes vs old output:
+    - Dedup by normalized symbol (no more ICICIGI + ICICIGI.NS)
+    - Show sector % numbers (how hot is hot?)
+    - Categorize stocks: BREAKOUT / BREAKDOWN / WATCH / MISSED
+    - Flag already-moved stocks (>10%) as missed, not opportunities
+    - Add NEXT ACTION line so you know what to do
+    """
+    lines = []
+
+    # ── Mode line ──
+    if args.bearish:
+        lines.append("🔻 Mode: BEARISH (short candidates)")
+    else:
+        lines.append("📈 Mode: BULLISH (long candidates)")
+
+    # ── Sector heat with actual % numbers ──
+    if sector_perf:
+        sec_map = {s: p for s, p, _ in sector_perf}
+        sec_parts = []
+        for s in hot_sectors:
+            p = sec_map.get(s)
+            if p is not None:
+                sec_parts.append(f"{s} {'+' if p >= 0 else ''}{p}%")
+            else:
+                sec_parts.append(s)
+        label = "Weak sectors" if args.bearish else "Hot sectors"
+        lines.append(f"🔥 {label}: {', '.join(sec_parts)}")
+
+    # ── Deduplicate all results by normalized symbol ──
+    seen = set()
+    deduped = []
+    for r in all_results:
+        key = _normalize_symbol(r["symbol"])
+        if key not in seen:
+            seen.add(key)
+            deduped.append(r)
+
+    # ── Categorize every stock with a volume surge ──
+    surge_set = [r for r in deduped if r["vol_ratio"] >= SURGE_THRESHOLD]
+    cats = {"BREAKOUT": [], "BREAKDOWN": [], "WATCH": [],
+            "MISSED_UP": [], "MISSED_DOWN": [], "FLAT_VOL_UP": []}
+    for r in surge_set:
+        c = _categorize_pick(r)
+        if c in cats:
+            cats[c].append(r)
+
+    # Sort each category by volume ratio (most volume first)
+    for c in cats:
+        cats[c].sort(key=lambda x: x["vol_ratio"], reverse=True)
+
+    if args.bearish:
+        # Bearish mode: mirror console logic — stocks in weak sectors, worst first
+        # SHORT signal: pct < -2 AND vol > 1.5x; else WATCH
+        weak_sector_stocks = set(_get_stocks_in_sectors(hot_sectors))
+        bearish_picks = [r for r in all_results
+                         if _normalize_symbol(r["symbol"]) in weak_sector_stocks
+                         or r["symbol"] in weak_sector_stocks]
+        # Dedup by normalized symbol
+        bp_seen = set()
+        bp_deduped = []
+        for r in bearish_picks:
+            k = _normalize_symbol(r["symbol"])
+            if k not in bp_seen:
+                bp_seen.add(k)
+                bp_deduped.append(r)
+        bearish_picks = bp_deduped
+        bearish_picks.sort(key=lambda x: x["pct_chg"])  # worst first
+
+        shorts = [r for r in bearish_picks if r["pct_chg"] < -2 and r["vol_ratio"] > 1.5]
+        watches = [r for r in bearish_picks if not (r["pct_chg"] < -2 and r["vol_ratio"] > 1.5)]
+
+        if shorts:
+            lines.append(f"\n🔻 SHORT — strong selling + volume ({len(shorts)}):")
+            for r in shorts[:5]:
+                sym = _normalize_symbol(r["symbol"])
+                lines.append(f"  {sym} | {r['pct_chg']}% | {r['vol_ratio']}x vol | CMP {r['close']}")
+        if watches:
+            lines.append(f"\n👀 WATCH — weak but no volume confirm ({len(watches)}):")
+            for r in watches[:5]:
+                sym = _normalize_symbol(r["symbol"])
+                lines.append(f"  {sym} | {r['pct_chg']}% | {r['vol_ratio']}x vol | CMP {r['close']}")
+        if not shorts and not watches:
+            lines.append("\nNo bearish candidates in weak sectors today.")
+    else:
+        # Bullish mode: show actionable categories
+        if cats["BREAKOUT"]:
+            lines.append(f"\n🟢 BREAKOUT — investigate for entry ({len(cats['BREAKOUT'])}):")
+            for r in cats["BREAKOUT"][:5]:
+                sym = _normalize_symbol(r["symbol"])
+                lines.append(f"  {sym} | +{r['pct_chg']}% | {r['vol_ratio']}x vol | CMP {r['close']}")
+        if cats["WATCH"]:
+            lines.append(f"\n👀 WATCH — volume spike, no direction ({len(cats['WATCH'])}):")
+            for r in cats["WATCH"][:3]:
+                sym = _normalize_symbol(r["symbol"])
+                lines.append(f"  {sym} | {('+' if r['pct_chg']>=0 else '')}{r['pct_chg']}% | {r['vol_ratio']}x vol | CMP {r['close']}")
+        if cats["BREAKDOWN"]:
+            lines.append(f"\n🔴 BREAKDOWN — avoid these ({len(cats['BREAKDOWN'])}):")
+            for r in cats["BREAKDOWN"][:3]:
+                sym = _normalize_symbol(r["symbol"])
+                lines.append(f"  {sym} | {r['pct_chg']}% | {r['vol_ratio']}x vol | CMP {r['close']}")
+        if cats["MISSED_UP"]:
+            lines.append(f"\n⏭️ MISSED — already moved >10% ({len(cats['MISSED_UP'])}):")
+            for r in cats["MISSED_UP"][:3]:
+                sym = _normalize_symbol(r["symbol"])
+                lines.append(f"  {sym} | +{r['pct_chg']}% | {r['vol_ratio']}x vol | CMP {r['close']}")
+
+        # Backbone movers (curated watchlist)
+        bb_movers = [r for r in backbone_results
+                     if r["pct_chg"] >= 2 or r["vol_ratio"] >= SURGE_THRESHOLD]
+        bb_movers.sort(key=lambda x: x["vol_ratio"], reverse=True)
+        # Dedup backbone by normalized symbol
+        bb_seen = set()
+        bb_deduped = []
+        for r in bb_movers:
+            k = _normalize_symbol(r["symbol"])
+            if k not in bb_seen:
+                bb_seen.add(k)
+                bb_deduped.append(r)
+        if bb_deduped:
+            lines.append(f"\n💼 Backbone movers ({len(bb_deduped)}):")
+            for r in bb_deduped[:5]:
+                sym = _normalize_symbol(r["symbol"])
+                lines.append(f"  {sym} | {('+' if r['pct_chg']>=0 else '')}{r['pct_chg']}% | {r['vol_ratio']}x vol | CMP {r['close']}")
+
+    # ── Next action ──
+    lines.append("")
+    if args.bearish:
+        lines.append("NEXT: Chart-verify BREAKDOWN picks. Short only on weak sectors with volume confirmation.")
+    elif cats["BREAKOUT"]:
+        lines.append("NEXT: Chart-verify BREAKOUT picks. Run `python scanner.py --test` for full setup analysis.")
+    elif cats["WATCH"]:
+        lines.append("NEXT: WATCH picks have volume but no direction. Wait for breakout confirmation before entering.")
+    else:
+        lines.append("NEXT: No strong setups today. Wait for next scan.")
+
+    lines.append("\n⚠️ Volume alerts = investigate, not buy signals. Always chart-verify.")
+    return lines
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--sector",  type=str,  default=None, help="Force sector: METAL/AUTO/BANK/IT etc")
@@ -551,30 +722,10 @@ def main():
     # Auto-send daily summary to Telegram (unless --no-notify)
     if not args.no_notify:
         header = f"📊 DAILY SCAN — {date.today().strftime('%d %b %Y')}"
-        lines = []
-        if args.bearish:
-            lines.append("🔻 Mode: BEARISH (short candidates)")
-            lines.append(f"Weak sectors: {', '.join(hot_sectors)}")
-            bearish_picks = [r for r in sector_results if r["symbol"] in sector_syms]
-            bearish_picks.sort(key=lambda x: x["pct_chg"])
-            for r in bearish_picks[:5]:
-                lines.append(f"  {r['symbol']} | {r['pct_chg']}% | vol {r['vol_ratio']}x | CMP {r['close']}")
-        else:
-            lines.append(f"🔥 Hot sectors: {', '.join(hot_sectors)}")
-            if surges:
-                lines.append(f"\n📈 Top volume surges ({len(surges)}):")
-                for r in surges[:5]:
-                    lines.append(f"  {r['symbol']} | {r['vol_ratio']}x vol | {('+' if r['pct_chg']>=0 else '')}{r['pct_chg']}% | CMP {r['close']}")
-            else:
-                lines.append("\nNo significant volume surges today.")
-            # Top backbone movers
-            top_movers = [r for r in backbone_results if r["pct_chg"] >= 2 or r["vol_ratio"] >= SURGE_THRESHOLD]
-            top_movers.sort(key=lambda x: x["vol_ratio"], reverse=True)
-            if top_movers:
-                lines.append(f"\n💼 Top backbone movers:")
-                for r in top_movers[:5]:
-                    lines.append(f"  {r['symbol']} | {('+' if r['pct_chg']>=0 else '')}{r['pct_chg']}% | {r['vol_ratio']}x vol | CMP {r['close']}")
-        lines.append("\n⚠️ For research only. Not financial advice.")
+        lines = _build_telegram_summary(
+            args, hot_sectors, sector_perf, surges, backbone_results,
+            all_results, sector_results, sector_syms
+        )
         send_daily_summary("\n".join(lines), header=header)
         print()
 
