@@ -268,7 +268,46 @@ SURGE_THRESHOLD = 1.8   # volume > 1.8x 20-day avg
 
 
 def get_sector_performance():
-    """Returns list of (sector, pct_change_today) sorted best first."""
+    """Returns list of (sector, pct_change_today, last_price) sorted best first.
+
+    Primary source: jugaad-data NSELive.all_indices() (no rate limiting).
+    Fallback: yfinance sector index tickers (rate-limited, may fail).
+    """
+    # ── Primary: NSE live via jugaad-data ──
+    # Map NSE index symbols to our sector names
+    NSE_INDEX_MAP = {
+        "NIFTY METAL":    "METAL",
+        "NIFTY AUTO":     "AUTO",
+        "NIFTY BANK":     "BANK",
+        "NIFTY IT":       "IT",
+        "NIFTY PHARMA":   "PHARMA",
+        "NIFTY FMCG":     "FMCG",
+        "NIFTY REALTY":   "REALTY",
+        "NIFTY ENERGY":   "ENERGY",
+        "NIFTY INFRA":    "INFRA",
+        "NIFTY MEDIA":    "MEDIA",
+        "NIFTY PSE":      "PSU",
+        "NIFTY MIDCAP 50":"MIDCAP",
+    }
+    try:
+        from jugaad_data import nse
+        live = nse.NSELive()
+        all_idx = live.all_indices()
+        if isinstance(all_idx, dict) and 'data' in all_idx:
+            results = []
+            for idx in all_idx['data']:
+                sym = idx.get('indexSymbol', '')
+                sector = NSE_INDEX_MAP.get(sym)
+                if sector:
+                    pct = round(float(idx.get('percentChange', 0)), 2)
+                    last = float(idx.get('last', 0))
+                    results.append((sector, pct, last))
+            if results:
+                return sorted(results, key=lambda x: x[1], reverse=True)
+    except Exception:
+        pass
+
+    # ── Fallback: yfinance (may be rate-limited) ──
     results = []
     for sector, ticker in SECTOR_INDICES.items():
         try:
