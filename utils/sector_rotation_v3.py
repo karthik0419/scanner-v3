@@ -171,6 +171,16 @@ YF_SECTOR_MAP = {
     'Utilities':                'Energy',
 }
 
+# Sector name aliases -> heatmap sector keys.
+# The NSE sector map JSON (and yfinance fallbacks) can return names that have
+# no matching heatmap index (e.g. 'Healthcare' vs heatmap key 'Pharma'),
+# which silently costs those stocks their sector bonus.
+# Sectors with no heatmap equivalent (Chemicals, Services, Textiles, ...)
+# are intentionally NOT aliased — 0 bonus is correct when there is no index.
+SECTOR_ALIASES = {
+    'Healthcare': 'Pharma',
+}
+
 _cache = {}
 _sector_lookup_cache = {}
 
@@ -244,11 +254,12 @@ def get_stock_sector(symbol):
     # 1. NSE official sector map (instant — loaded from JSON at module init)
     sec = STOCK_SECTOR.get(sym_ns) or STOCK_SECTOR.get(sym_raw)
     if sec:
-        return sec
+        return SECTOR_ALIASES.get(sec, sec)
 
     # 2. Session cache
     if sym_ns in _sector_lookup_cache:
-        return _sector_lookup_cache[sym_ns]
+        cached = _sector_lookup_cache[sym_ns]
+        return SECTOR_ALIASES.get(cached, cached)
 
     # 3. yfinance `industry` field (granular fallback)
     try:
@@ -265,6 +276,7 @@ def get_stock_sector(symbol):
         # Fall back to coarse sector
         yf_sector = info.get('sector', '')
         mapped = YF_SECTOR_MAP.get(yf_sector, yf_sector or 'Unknown')
+        mapped = SECTOR_ALIASES.get(mapped, mapped)
         _sector_lookup_cache[sym_ns] = mapped
         return mapped
     except Exception:

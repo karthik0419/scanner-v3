@@ -139,13 +139,13 @@ def _score(result):
         "Symmetrical Triangle":          12,
         "Darvas Box":                    15,
         "Bullish Flag":                  12,
-        "Descending Wedge":              14,
+        "Descending Wedge":              8,    # demoted (was 14) — 27.8% WR over 5yr
         "Break & Retest":                10,
-        "S&R Breakout":                  10,
+        "S&R Breakout":                  14,   # promoted (was 10) — 52.3% WR over 5yr
         "Channel Breakout (Descending)": 12,
         "Channel Breakout (Ascending)":  10,
         "Channel Breakout":              8,
-        "S&R Support":                   10,
+        "S&R Support":                   22,   # promoted (was 10) — 63% WR / +4.79% avg over 5yr
         "Resistance Breakout":           10,
     }
     score += pat_bonus.get(pat_tf, pat_bonus.get(pat, 5))
@@ -210,12 +210,32 @@ def _close_trade(trade, exit_price, exit_date, exit_reason):
     return trade
 
 
+def _data_is_sane(df, symbol=""):
+    """
+    Sanity-check OHLCV data for corruption (unadjusted splits/bonuses, bad ticks).
+    Corrupted data (e.g. NTPC over 5yr) produces impossible backtest trades
+    like +11,833% in 45 days, silently poisoning aggregate stats.
+    Rejects the symbol if any single-day close-to-close move exceeds 40%.
+    """
+    if df is None or len(df) < 2:
+        return False
+    pct = df["Close"].pct_change().abs()
+    bad_days = pct[pct > 0.40]
+    if len(bad_days) > 0:
+        print(f"[SKIP {symbol}] {len(bad_days)} day(s) with >40% close jump "
+              f"(likely unadjusted split/bonus or bad data)", end=" ")
+        return False
+    return True
+
+
 def backtest_symbol(symbol, years=2, min_score=50, scan_every=5, atr_stop=True):
     """
     Walk-forward backtest for a single symbol using v3 patterns + ATR stops.
     """
     df = _fetch_nse(symbol.replace(".NS", ""), days=years * 365)
     if df is None or len(df) < 140 + 10:
+        return []
+    if not _data_is_sane(df, symbol):
         return []
 
     trades = []

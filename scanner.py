@@ -55,6 +55,9 @@ from patterns.compression        import detect_compression
 # Self-contained sector rotation (v3 — no external dependency)
 from utils.sector_rotation_v3 import get_sector_bonus, print_sector_heatmap, get_sector_heat
 
+# Market regime filter (Nifty vs 200DMA) — 5yr backtest showed longs lose in RISK_OFF
+from utils.regime import get_market_regime, print_regime_banner
+
 # Telegram notification (auto-sends after scan completes)
 from telegram_notify import notify_scan_results
 
@@ -210,13 +213,13 @@ def _score(result):
         "Symmetrical Triangle":          12,
         "Darvas Box":                    15,
         "Bullish Flag":                  12,
-        "Descending Wedge":              14,
+        "Descending Wedge":              8,    # demoted (was 14) — 27.8% WR over 5yr/223 trades
         "Break & Retest":                10,
-        "S&R Breakout":                  10,
+        "S&R Breakout":                  14,   # promoted (was 10) — 52.3% WR over 5yr/130 trades
         "Channel Breakout (Descending)": 12,   # demoted (was 22) — 24% win rate
         "Channel Breakout (Ascending)":  10,   # demoted (was 18)
         "Channel Breakout":              8,    # demoted (was 10)
-        "S&R Support":                   10,
+        "S&R Support":                   22,   # promoted (was 10) — 63% WR / +4.79% avg over 5yr
         "Resistance Breakout":           10,
     }
     score += pat_bonus.get(pat_tf, pat_bonus.get(pat, 5))
@@ -333,6 +336,10 @@ def main():
           f"{args.min_price or 0}-{args.max_price or 'inf'} | "
           f"Direction: {'BEARISH' if args.bearish else 'BULLISH'}")
     print("=" * 70)
+
+    # Market regime check (Nifty vs 200DMA)
+    regime = get_market_regime()
+    print_regime_banner(regime, bearish=args.bearish)
 
     print("\n[1/4] Loading NSE EQ universe...")
     symbols = fetch_nse_eq_universe()
