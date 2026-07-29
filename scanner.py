@@ -358,6 +358,8 @@ def main():
                         help="Scan for bearish/short setups in weak sectors")
     parser.add_argument("--no-notify",  action="store_true",
                         help="Skip Telegram notification (default: auto-send on completion)")
+    parser.add_argument("--no-sync",    action="store_true",
+                        help="Skip paper tracker sync (default: auto-sync on completion)")
     parser.add_argument("--timeframe",  type=str,  default="all",
                         choices=["all", "daily", "weekly", "monthly"],
                         help="Filter by timeframe: all (default), daily, weekly, monthly")
@@ -531,6 +533,16 @@ def main():
     if not args.no_notify:
         print("[Telegram] Notifying...")
         notify_scan_results(csv_path=out_path, top=10, bearish=args.bearish)
+        print()
+
+    # Auto-sync paper tracker with new scan picks
+    if not args.no_sync:
+        print("[Paper Tracker] Syncing...")
+        try:
+            from paper_tracker import sync_tracker
+            sync_tracker(csv_path=out_path)
+        except Exception as e:
+            print(f"  Sync skipped: {e}")
         print()
 
 

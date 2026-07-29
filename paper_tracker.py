@@ -103,6 +103,145 @@ def init_tracker(csv_path=None):
     print(f"\nRun 'python paper_tracker.py update' to fetch current prices.")
 
 
+# ── Sync: merge new scan picks into existing tracker ─────────────────
+def sync_tracker(csv_path=None):
+    """Merge new scan results into the existing tracker.
+    
+    - New symbols (not in tracker) → added as new picks
+    - Existing symbols still OPEN/WAITING_BREAKOUT → updated with latest scan data
+      (new breakout level, new SL, new targets — in case the pattern evolved)
+    - Existing symbols that are LOSS/WIN/TIME_EXIT → kept as-is (closed trades don't change)
+    - Existing symbols that are RE_ENTERED → kept as-is (active re-entry trade)
+    
+    This is called automatically by scanner.py after each scan, or manually:
+      python paper_tracker.py sync
+      python paper_tracker.py sync --csv results/v3_2026-07-30.csv
+    """
+    if csv_path is None:
+        csvs = sorted(
+            [f for f in os.listdir(RESULTS_DIR) if f.startswith("v3_") and f.endswith(".csv") and "_all" not in f],
+            reverse=True,
+        )
+        if not csvs:
+            print("No scan CSV found. Run scanner.py first.")
+            return
+        csv_path = os.path.join(RESULTS_DIR, csvs[0])
+
+    new_df = pd.read_csv(csv_path)
+    scan_date = date.today().isoformat()
+
+    # Build new picks dataframe
+    new_picks = pd.DataFrame({
+        "symbol":          new_df["symbol"],
+        "pattern":         new_df["pattern"],
+        "status_at_scan":  new_df["status"],
+        "breakout_level":  new_df["breakout"],
+        "entry_price":     new_df["cmp"],
+        "stop_loss":       new_df["stop_loss"],
+        "target_1":        new_df["target_1"],
+        "target_2":        new_df["target_2"],
+        "scan_date":       scan_date,
+        "cmp_at_scan":     new_df["cmp"],
+        "risk_pct":        new_df["risk_%"],
+        "upside_pct":      new_df["upside_%"],
+        "rr":              new_df["rr"],
+        "score":           new_df["score"],
+        "sector":          new_df.get("sector", ""),
+        "current_price":   new_df["cmp"],
+        "current_status":  "OPEN",
+        "current_pnl_pct": 0.0,
+        "days_held":       0,
+        "exit_price":      None,
+        "exit_date":       None,
+        "exit_reason":     None,
+        "tradeable":       new_df["risk_%"].apply(tradeability),
+    })
+    # Set initial status based on scan status
+    new_picks.loc[new_picks["status_at_scan"] == "NEAR", "current_status"] = "WAITING_BREAKOUT"
+    new_picks.loc[new_picks["status_at_scan"] == "WATCH", "current_status"] = "WATCH"
+    new_picks.loc[new_picks["status_at_scan"] == "NEAR", "entry_price"] = new_picks.loc[new_picks["status_at_scan"] == "NEAR", "breakout_level"]
+
+    if not os.path.exists(TRACKER_PATH):
+        # No existing tracker — just init
+        new_picks.to_csv(TRACKER_PATH, index=False)
+        print(f"[SYNC] No existing tracker — initialized new one with {len(new_picks)} picks")
+        return
+
+    # Load existing tracker
+    existing = pd.read_csv(TRACKER_PATH)
+    
+    # Statuses that are "closed" — don't touch these
+    CLOSED = {"LOSS", "WIN_T1", "WIN_T2", "TIME_EXIT"}
+    # Statuses that are "active" — update with new scan data
+    ACTIVE = {"OPEN", "WAITING_BREAKOUT", "WATCH", "RE_ENTERED"}
+    
+    new_symbols = set(new_picks["symbol"])
+    existing_symbols = set(existing["symbol"])
+    
+    added = 0
+    updated = 0
+    kept = 0
+    
+    # 1. New symbols not in tracker → add them
+    to_add = new_picks[~new_picks["symbol"].isin(existing_symbols)]
+    
+    # 2. Existing symbols that are still active → update with latest scan data
+    to_update_rows = []
+    for idx, row in existing.iterrows():
+        sym = row["symbol"]
+        if sym in new_symbols and row["current_status"] in ACTIVE:
+            # Update with new scan data but preserve current_status and trade progress
+            new_row = new_picks[new_picks["symbol"] == sym].iloc[0].to_dict()
+            # Keep the current status (don't reset WAITING_BREAKOUT to OPEN)
+            # But update breakout level, SL, targets in case pattern evolved
+            existing.at[idx, "breakout_level"] = new_row["breakout_level"]
+            existing.at[idx, "stop_loss"] = new_row["stop_loss"]
+            existing.at[idx, "target_1"] = new_row["target_1"]
+            existing.at[idx, "target_2"] = new_row["target_2"]
+            existing.at[idx, "score"] = new_row["score"]
+            existing.at[idx, "pattern"] = new_row["pattern"]
+            existing.at[idx, "status_at_scan"] = new_row["status_at_scan"]
+            existing.at[idx, "cmp_at_scan"] = new_row["cmp_at_scan"]
+            existing.at[idx, "risk_pct"] = new_row["risk_pct"]
+            existing.at[idx, "upside_pct"] = new_row["upside_pct"]
+            existing.at[idx, "rr"] = new_row["rr"]
+            existing.at[idx, "sector"] = new_row["sector"]
+            existing.at[idx, "scan_date"] = scan_date  # update scan date
+            # If was WAITING_BREAKOUT and new scan says BREAKOUT → enter it
+            if row["current_status"] == "WAITING_BREAKOUT" and new_row["status_at_scan"] == "BREAKOUT":
+                existing.at[idx, "current_status"] = "OPEN"
+                existing.at[idx, "entry_price"] = new_row["cmp_at_scan"]
+                existing.at[idx, "days_held"] = 0
+                print(f"  [SYNC-BREAKOUT] {sym} now BREAKOUT in new scan — entered at {new_row['cmp_at_scan']}")
+            # If was WATCH and new scan says NEAR → upgrade to WAITING_BREAKOUT
+            elif row["current_status"] == "WATCH" and new_row["status_at_scan"] in ("NEAR", "BREAKOUT"):
+                existing.at[idx, "current_status"] = "WAITING_BREAKOUT" if new_row["status_at_scan"] == "NEAR" else "OPEN"
+                if new_row["status_at_scan"] == "NEAR":
+                    existing.at[idx, "entry_price"] = new_row["breakout_level"]
+                print(f"  [SYNC-UPGRADE] {sym} upgraded from WATCH to {existing.at[idx, 'current_status']}")
+            updated += 1
+        elif sym in new_symbols and row["current_status"] in CLOSED:
+            kept += 1  # closed trade, don't touch
+        elif sym not in new_symbols and row["current_status"] in ACTIVE:
+            kept += 1  # not in new scan but still active, keep tracking
+        else:
+            kept += 1
+    
+    # Combine: existing (with updates) + new picks
+    if len(to_add) > 0:
+        combined = pd.concat([existing, to_add], ignore_index=True)
+        added = len(to_add)
+    else:
+        combined = existing
+    
+    combined.to_csv(TRACKER_PATH, index=False)
+    print(f"[SYNC] Tracker updated from {os.path.basename(csv_path)}")
+    print(f"  New picks added:    {added}")
+    print(f"  Existing updated:   {updated}")
+    print(f"  Kept as-is:         {kept}")
+    print(f"  Total in tracker:   {len(combined)}")
+
+
 # ── Update prices ───────────────────────────────────────────────────
 def update_tracker(manual_prices=None):
     if not os.path.exists(TRACKER_PATH):
@@ -363,7 +502,10 @@ def main():
     p_init = sub.add_parser("init", help="Initialize tracker from scan CSV")
     p_init.add_argument("--csv", default=None, help="Path to scan CSV (default: latest)")
 
-    p_update = sub.add_parser("update", help="Update current prices")
+    p_sync = sub.add_parser("sync", help="Merge new scan picks into existing tracker")
+    p_sync.add_argument("--csv", default=None, help="Path to scan CSV (default: latest)")
+
+    p_update = sub.add_parser("update", help="Update current prices + check breakouts + check re-entries")
     p_update.add_argument("--price", action="append", default=[],
                           help="Manual price: SYMBOL=PRICE (can repeat)")
 
@@ -375,6 +517,8 @@ def main():
 
     if args.command == "init":
         init_tracker(args.csv)
+    elif args.command == "sync":
+        sync_tracker(args.csv)
     elif args.command == "update":
         manual = {}
         for p in args.price:
