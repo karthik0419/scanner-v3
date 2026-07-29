@@ -603,6 +603,39 @@ def main():
             print(f"  Sync skipped: {e}")
         print()
 
+    # Post-scan: offer to check breakouts + re-entries (interactive prompt)
+    if not args.no_sync and sys.stdin.isatty():
+        print("=" * 70)
+        print("  POST-SCAN OPTIONS")
+        print("=" * 70)
+        print("  1. Check breakouts + re-entries now (fetch live prices)")
+        print("  2. Show tracker status")
+        print("  3. Skip — exit")
+        print()
+        try:
+            post_choice = input("  Choice [1-3, default=3]: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            post_choice = "3"
+
+        if post_choice == "1":
+            print("\n[Paper Tracker] Fetching prices + checking breakouts + re-entries...")
+            try:
+                from paper_tracker import update_tracker, show_status
+                update_tracker()
+                print()
+                show_status()
+            except Exception as e:
+                print(f"  Update failed: {e}")
+            print()
+        elif post_choice == "2":
+            print()
+            try:
+                from paper_tracker import show_status
+                show_status()
+            except Exception as e:
+                print(f"  Status failed: {e}")
+            print()
+
 
 if __name__ == "__main__":
     main()
