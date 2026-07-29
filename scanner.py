@@ -87,10 +87,11 @@ def _calc_atr(df, period=14):
 
 
 # ── ATR-based stop loss ──────────────────────────────────────────────────
-def _atr_stop_loss(df, breakout, atr, multiplier=1.5):
+def _atr_stop_loss(df, breakout, atr, multiplier=2.0):
     """ATR-based stop: breakout - (multiplier * ATR).
     Tighter than v2's handle_low * 0.98 which often gave -8% to -15% losses.
-    multiplier=1.5 gives ~3-5% stop on typical NSE stocks."""
+    multiplier=2.0 gives ~4-6% stop on typical NSE stocks.
+    (2.0x chosen over 1.5x after ATR sweep: PF 2.03 vs 1.80, DD -46.8% vs -66.7%)"""
     if atr <= 0:
         return breakout * 0.96  # fallback: 4% below breakout
     stop = breakout - (multiplier * atr)
@@ -156,7 +157,7 @@ def _add_targets(result):
     target2  = result.get("target", 0)
     if breakout > 0 and target2 > breakout:
         move = target2 - breakout
-        result["target_1"] = round(breakout + move * 0.60, 2)
+        result["target_1"] = round(breakout + move * 0.50, 2)  # was 0.60 — 50% of measured move is more realistic for swings
         result["target_2"] = round(target2, 2)
     else:
         result["target_1"] = result.get("target", 0)
@@ -174,9 +175,19 @@ def _score(result):
     if cmp <= 0 or stop <= 0 or stop >= cmp:
         return 0, 0
 
-    upside = (target - cmp) / cmp * 100
-    risk   = (cmp - stop) / cmp * 100
+    # R:R calculated from BREAKOUT entry price (where you'd actually enter),
+    # not from CMP (which may be below breakout for NEAR/WATCH picks).
+    # For BREAKOUT picks, entry ≈ CMP, so this is the same.
+    entry = breakout if breakout > 0 and breakout <= cmp * 1.02 else cmp
+    upside = (target - entry) / entry * 100
+    risk   = (entry - stop) / entry * 100
     rr     = upside / risk if risk > 0 else 0
+
+    # Penalty for wide stops (>6% risk from entry)
+    if risk > 8:
+        rr *= 0.5  # halve R:R for excessive risk
+    elif risk > 6:
+        rr *= 0.8  # 20% penalty for wide risk
 
     score = 0
     if rr >= 3:   score += 40
@@ -233,37 +244,58 @@ def _apply_sl_mode(result, df, sl_mode):
     """Override stop loss with ATR-based calculation if --sl-mode atr.
     Uses hybrid approach: keeps original structural stops for C&H/Wedge
     (handle low / wedge low are structurally meaningful), uses ATR stops
-    for patterns without structural stops (S&R, Breakout, etc.)."""
-    if sl_mode != "atr":
-        return result
-
+    for patterns without structural stops (S&R, Breakout, etc.).
+    ALWAYS caps max risk at 8% — if structural stop is wider, tighten to ATR."""
     pat = result.get("pattern", "")
-
-    # Patterns that keep their original structural stop
-    # (ATR stops reduced their win rate in backtesting)
-    KEEP_ORIGINAL_STOP = {
-        "Cup & Handle":             True,   # handle low is structural — 48.9% WR vs 34.1% with ATR
-        "Descending Wedge":         True,   # wedge low is structural — 28.6% WR vs 23.0% with ATR
-    }
-    # C&H on ALL timeframes keeps structural stops
-    if "Cup & Handle" in pat:
-        return result
-
-    if KEEP_ORIGINAL_STOP.get(pat, False):
-        return result  # keep original stop
-
-    atr = _calc_atr(df, period=14)
-    if atr <= 0:
-        return result
-    breakout = result.get("breakout", 0)
     cmp = result.get("cmp", 0)
-    new_stop = _atr_stop_loss(df, breakout, atr, multiplier=1.5)
+    current_stop = result.get("stop_loss", 0)
+    current_risk = (cmp - current_stop) / cmp if cmp else 0
+    MAX_RISK = 0.08  # 8% max stop loss from CMP
+
+    # If structural stop is already within 8%, keep it (no change needed)
+    if current_risk <= MAX_RISK and sl_mode != "atr":
+        return result
+
+    # If structural stop is too wide (>8%), always try ATR regardless of pattern
+    atr = _calc_atr(df, period=14)
+
+    if sl_mode == "atr" and current_risk <= MAX_RISK:
+        # ATR mode requested but structural stop is fine — only override for non-structural patterns
+        KEEP_ORIGINAL_STOP = {
+            "Cup & Handle":             True,   # handle low is structural
+            "Descending Wedge":         True,   # wedge low is structural
+        }
+        if "Cup & Handle" in pat or KEEP_ORIGINAL_STOP.get(pat, False):
+            return result  # keep original stop
+
+    # Either: ATR mode + non-structural pattern, OR structural stop too wide (>8%)
+    if atr <= 0:
+        # No ATR — just cap at 8% max
+        if current_risk > MAX_RISK:
+            result["stop_loss"] = round(cmp * (1 - MAX_RISK), 2)
+            result["stop_capped"] = True
+        return result
+
+    breakout = result.get("breakout", 0)
+    new_stop = _atr_stop_loss(df, breakout, atr, multiplier=2.0)
     if new_stop > 0 and new_stop < cmp:
-        max_stop_drop = cmp * 0.92  # max 8% stop
+        max_stop_drop = cmp * (1 - MAX_RISK)  # max 8% stop
         new_stop = max(new_stop, max_stop_drop)
-        result["stop_loss"] = new_stop
-        result["atr"] = round(atr, 2)
-        result["atr_mult"] = 1.5
+        new_risk = (cmp - new_stop) / cmp
+        if new_risk <= MAX_RISK:
+            result["stop_loss"] = new_stop
+            result["atr"] = round(atr, 2)
+            result["atr_mult"] = 2.0
+            if current_risk > MAX_RISK:
+                result["stop_tightened"] = True  # flag: structural stop was too wide
+        else:
+            # ATR stop also too wide — hard cap at 8%
+            result["stop_loss"] = round(max_stop_drop, 2)
+            result["stop_capped"] = True
+    elif current_risk > MAX_RISK:
+        # ATR calc failed but structural stop too wide — hard cap
+        result["stop_loss"] = round(cmp * (1 - MAX_RISK), 2)
+        result["stop_capped"] = True
     return result
 
 
@@ -314,6 +346,8 @@ def main():
     parser.add_argument("--min-score",  type=float, default=50)
     parser.add_argument("--workers",    type=int,   default=MAX_WORKERS)
     parser.add_argument("--test",       action="store_true")
+    parser.add_argument("--stocks",     type=str,   default=None,
+                        help="Custom stock list file (one symbol per line, e.g. nifty200.txt)")
     parser.add_argument("--sl-mode",    choices=["original", "atr"], default="atr",
                         help="Stop loss mode: atr (default, tighter) or original (v2)")
     parser.add_argument("--min-price",  type=float, default=None,
@@ -342,7 +376,19 @@ def main():
     print_regime_banner(regime, bearish=args.bearish)
 
     print("\n[1/4] Loading NSE EQ universe...")
-    symbols = fetch_nse_eq_universe()
+    if args.stocks:
+        # Use custom stock list file (one symbol per line, with or without .NS)
+        import os
+        if os.path.exists(args.stocks):
+            with open(args.stocks) as f:
+                symbols = [l.strip() for l in f if l.strip() and not l.startswith('#')]
+            symbols = [s if s.endswith('.NS') else s + '.NS' for s in symbols]
+            print(f"  Custom list: {args.stocks} ({len(symbols)} stocks)")
+        else:
+            print(f"  File not found: {args.stocks}")
+            return
+    else:
+        symbols = fetch_nse_eq_universe()
     if not symbols:
         print("  Failed. Exiting.")
         return
@@ -388,11 +434,23 @@ def main():
             score, rr = _score(result)
             if rr <= 0:
                 continue
-            below_cutoff = score < args.min_score
 
             cmp  = result.get("cmp", 0)
             t1   = result.get("target_1", 0)
             stop = result.get("stop_loss", 0)
+            bo   = result.get("breakout", 0)
+
+            # Max risk filter: reject picks with >10% stop loss from CMP
+            risk_pct = (cmp - stop) / cmp * 100 if cmp else 0
+            if risk_pct > 10:
+                continue  # too risky — skip entirely
+
+            # Max distance filter: reject picks >8% from breakout (won't trigger soon)
+            dist_pct = abs(bo - cmp) / cmp * 100 if bo and cmp else 0
+            if bo > 0 and dist_pct > 8 and result.get("status") != "BREAKOUT":
+                continue  # too far from breakout to be actionable
+
+            below_cutoff = score < args.min_score
 
             # Sector rotation
             try:
@@ -405,18 +463,20 @@ def main():
             if args.bearish and sector_signal not in ("WEAK", "COOLING"):
                 continue
 
+            # Use breakout as entry for upside/risk columns (where you'd actually enter)
+            entry = bo if bo > 0 and bo <= cmp * 1.02 else cmp
             row = {
                 "symbol":         sym,
                 "pattern":        result.get("pattern"),
                 "timeframe":      result.get("timeframe", "Daily"),
                 "status":         result.get("status"),
                 "cmp":            round(cmp, 2),
-                "breakout":       round(result.get("breakout", 0), 2),
+                "breakout":       round(bo, 2),
                 "stop_loss":      round(stop, 2),
                 "target_1":       round(t1, 2),
                 "target_2":       round(result.get("target_2", 0), 2),
-                "upside_%":       round((t1 - cmp) / cmp * 100, 2) if cmp else 0,
-                "risk_%":         round((cmp - stop) / cmp * 100, 2) if cmp else 0,
+                "upside_%":       round((t1 - entry) / entry * 100, 2) if entry else 0,
+                "risk_%":         round((entry - stop) / entry * 100, 2) if entry else 0,
                 "rr":             rr,
                 "volume":         result.get("volume", False),
                 "neckline":       result.get("neckline_kind", ""),

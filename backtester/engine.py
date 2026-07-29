@@ -90,7 +90,7 @@ def _add_targets(result):
     target2  = result.get("target", 0)
     if breakout > 0 and target2 > breakout:
         move = target2 - breakout
-        result["target_1"] = round(breakout + move * 0.60, 2)
+        result["target_1"] = round(breakout + move * 0.50, 2)  # was 0.60 — 50% of measured move
         result["target_2"] = round(target2, 2)
     else:
         result["target_1"] = result.get("target", 0)
@@ -107,9 +107,17 @@ def _score(result):
     if cmp <= 0 or stop <= 0 or stop >= cmp:
         return 0, 0
 
-    upside = (target - cmp) / cmp * 100
-    risk   = (cmp - stop) / cmp * 100
+    # R:R from breakout entry price (where you'd actually enter)
+    entry = breakout if breakout > 0 and breakout <= cmp * 1.02 else cmp
+    upside = (target - entry) / entry * 100
+    risk   = (entry - stop) / entry * 100
     rr     = upside / risk if risk > 0 else 0
+
+    # Penalty for wide stops
+    if risk > 8:
+        rr *= 0.5
+    elif risk > 6:
+        rr *= 0.8
 
     score = 0
     if rr >= 3:   score += 40
@@ -154,47 +162,45 @@ def _score(result):
 
 
 def _apply_atr_stop(result, df_slice, atr_multiplier=None):
-    """Apply ATR-based stop loss with pattern-specific logic.
+    """Apply ATR-based stop loss with 8% max risk cap for ALL patterns.
 
-    Key finding from backtest: C&H and Wedge patterns have structurally
-    meaningful stops (handle low, wedge low) that outperform ATR stops.
-    ATR stops work better for patterns without structural stops (S&R, Breakout).
-
-    Strategy: Keep original stops for C&H/Wedge, use ATR for everything else.
+    v3 fix: Structural stops (C&H handle low, wedge low) can be 15-25% below
+    entry on monthly patterns — way too wide. Now ALWAYS caps at 8% max risk.
+    If structural stop is within 8%, keep it. If wider, use ATR or hard cap.
     """
     pat = result.get("pattern", "")
+    cmp = result.get("cmp", 0)
+    current_stop = result.get("stop_loss", 0)
+    current_risk = (cmp - current_stop) / cmp if cmp else 0
+    MAX_RISK = 0.08
 
-    # Patterns that should keep their original structural stop
-    # (ATR stops reduced their win rate significantly in backtesting)
-    KEEP_ORIGINAL_STOP = {
-        "Cup & Handle":             True,   # handle low is structural — 48.9% WR vs 34.1% with ATR
-        "Descending Wedge":         True,   # wedge low is structural — 28.6% WR vs 23.0% with ATR
-        "Double Bottom":            False,  # ATR works fine — 56.6% WR
-    }
-    # C&H on ALL timeframes keeps structural stops
-    if "Cup & Handle" in pat:
-        KEEP_ORIGINAL_STOP[pat] = True
-
-    if KEEP_ORIGINAL_STOP.get(pat, False):
-        # Keep the pattern's original stop loss (don't override with ATR)
+    # If structural stop is already within 8%, keep it
+    if current_risk <= MAX_RISK:
         return result
 
-    # Use ATR stop for patterns without structural stops
+    # Structural stop too wide — try ATR
     if atr_multiplier is None:
-        atr_multiplier = 1.5
+        atr_multiplier = 2.0
 
     atr = _calc_atr(df_slice, period=14)
-    if atr <= 0:
-        return result
     breakout = result.get("breakout", 0)
-    cmp = result.get("cmp", 0)
-    new_stop = round(breakout - (atr_multiplier * atr), 2)
-    if new_stop > 0 and new_stop < cmp:
-        max_stop_drop = cmp * 0.92  # max 8% stop
-        new_stop = max(new_stop, max_stop_drop)
-        result["stop_loss"] = new_stop
-        result["atr"] = round(atr, 2)
-        result["atr_mult"] = atr_multiplier
+
+    if atr > 0:
+        new_stop = round(breakout - (atr_multiplier * atr), 2)
+        if new_stop > 0 and new_stop < cmp:
+            max_stop_drop = cmp * (1 - MAX_RISK)
+            new_stop = max(new_stop, max_stop_drop)
+            new_risk = (cmp - new_stop) / cmp
+            if new_risk <= MAX_RISK:
+                result["stop_loss"] = new_stop
+                result["atr"] = round(atr, 2)
+                result["atr_mult"] = atr_multiplier
+                result["stop_tightened"] = True
+                return result
+
+    # ATR failed or still too wide — hard cap at 8%
+    result["stop_loss"] = round(cmp * (1 - MAX_RISK), 2)
+    result["stop_capped"] = True
     return result
 
 
@@ -243,6 +249,10 @@ def backtest_symbol(symbol, years=2, min_score=50, scan_every=5, atr_stop=True):
     last_scan_idx = 0
     t1_hit = False
     trailing_stop = None
+    last_breakout = 0       # for re-entry after SL
+    last_sl_date = None     # for re-entry cooldown
+    RE_ENTRY_COOLDOWN = 10  # bars to wait before re-entry after SL
+    RE_ENTRY_MAX_DAYS = 30  # max days after SL to attempt re-entry
 
     for i in range(140, len(df)):
         current_date = df.index[i]
@@ -250,6 +260,38 @@ def backtest_symbol(symbol, years=2, min_score=50, scan_every=5, atr_stop=True):
         low = float(row["Low"])
         high = float(row["High"])
         close = float(row["Close"])
+
+        # --- Re-entry after whipsaw: if stock crosses breakout again after SL ---
+        if (open_trade is None and last_breakout > 0 and last_sl_date is not None
+                and (i - last_scan_idx) >= 1):  # check every bar for re-entry
+            days_since_sl = (current_date - last_sl_date).days
+            if days_since_sl <= RE_ENTRY_MAX_DAYS and close >= last_breakout:
+                # Re-enter! Stock has recovered above breakout after SL hit
+                if i + 1 < len(df):
+                    re_entry_price = float(df.iloc[i + 1]["Open"])
+                    # Use a tighter stop for re-entry (2% below breakout)
+                    re_entry_stop = round(last_breakout * 0.98, 2)
+                    if re_entry_stop < re_entry_price:
+                        # Re-use the last signal's targets
+                        open_trade = {
+                            "symbol": symbol,
+                            "pattern": "Re-entry",
+                            "signal_date": current_date,
+                            "entry_date": df.index[i + 1],
+                            "entry_price": re_entry_price,
+                            "stop_loss": re_entry_stop,
+                            "target_1": round(last_breakout + (last_breakout - re_entry_stop) * 2, 2),  # 2R target
+                            "target_2": round(last_breakout + (last_breakout - re_entry_stop) * 3, 2),  # 3R target
+                            "score": 50, "rr": 2.0, "status": "RE_ENTRY",
+                            "atr": 0, "exit_price": None, "exit_date": None,
+                            "exit_reason": None, "pnl_pct": None, "result": None,
+                            "days_held": None, "quantity_pct": 100,
+                            "breakout_level": last_breakout,
+                        }
+                        last_breakout = 0
+                        last_sl_date = None
+                        last_scan_idx = i
+                        continue
 
         # --- Manage open trade ---
         if open_trade is not None:
@@ -261,6 +303,9 @@ def backtest_symbol(symbol, years=2, min_score=50, scan_every=5, atr_stop=True):
             if low <= effective_stop:
                 trades.append(_close_trade(open_trade, effective_stop, current_date,
                                            "Trailing Stop" if t1_hit else "Stop Loss"))
+                # Remember the breakout level for potential re-entry
+                last_breakout = open_trade.get("breakout_level", 0)
+                last_sl_date = current_date
                 open_trade = None
                 t1_hit = False
                 trailing_stop = None
@@ -272,6 +317,7 @@ def backtest_symbol(symbol, years=2, min_score=50, scan_every=5, atr_stop=True):
                 open_trade = None
                 t1_hit = False
                 trailing_stop = None
+                last_breakout = 0
                 continue
 
             # 3. Target 1 hit — exit at T1, then set trailing stop for remaining position
@@ -291,6 +337,7 @@ def backtest_symbol(symbol, years=2, min_score=50, scan_every=5, atr_stop=True):
                 open_trade = None
                 t1_hit = False
                 trailing_stop = None
+                last_breakout = 0
                 continue
 
         # --- Scan for new signal ---
@@ -307,6 +354,17 @@ def backtest_symbol(symbol, years=2, min_score=50, scan_every=5, atr_stop=True):
                 score, rr = _score(result)
                 result["score"] = score
                 result["rr"] = rr
+
+                # v3 fixes: max risk filter (10%) and max distance filter (8%)
+                cmp_val = result.get("cmp", 0)
+                stop_val = result.get("stop_loss", 0)
+                bo_val = result.get("breakout", 0)
+                risk_pct = (cmp_val - stop_val) / cmp_val * 100 if cmp_val else 0
+                if risk_pct > 10:
+                    continue  # too risky
+                dist_pct = abs(bo_val - cmp_val) / cmp_val * 100 if bo_val and cmp_val else 0
+                if bo_val > 0 and dist_pct > 8 and result.get("status") != "BREAKOUT":
+                    continue  # too far from breakout
 
                 if score >= min_score and rr > 0:
                     if i + 1 >= len(df):
@@ -337,6 +395,7 @@ def backtest_symbol(symbol, years=2, min_score=50, scan_every=5, atr_stop=True):
                         "result": None,
                         "days_held": None,
                         "quantity_pct": 100,  # full position unless T1 split
+                        "breakout_level": result.get("breakout", 0),  # for re-entry
                     }
 
     # Close any remaining open trade

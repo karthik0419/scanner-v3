@@ -328,7 +328,7 @@ def get_price_info(symbol):
 
     Trade plan logic:
     - Entry: current close (for BREAKOUT) or today's high (for WATCH — buy on breakout)
-    - Stop loss: max(today's low, close - 1.5*ATR) — structural + ATR hybrid
+    - Stop loss: max(today's low, close - 2.0*ATR) — structural + ATR hybrid, 8% max cap
     - Target: entry + 2 * (entry - stop) — 2:1 R:R minimum
     - R:R: (target - entry) / (entry - stop)
     """
@@ -366,10 +366,14 @@ def get_price_info(symbol):
         # ── Trade plan ──
         # Entry: current close (you'd enter at market on breakout confirmation)
         entry = cur_close
-        # Stop: structural (today's low) or ATR-based (close - 1.5*ATR), whichever is tighter
-        stop_atr   = cur_close - 1.5 * atr if atr > 0 else cur_close * 0.95
+        # Stop: structural (today's low) or ATR-based (close - 2.0*ATR), whichever is tighter
+        # 2.0x ATR chosen after multiplier sweep: PF 2.03 vs 1.80 at 1.5x, DD -46.8% vs -66.7%
+        stop_atr   = cur_close - 2.0 * atr if atr > 0 else cur_close * 0.95
         stop_struct = today_low
         stop = max(stop_struct, stop_atr)  # tighter stop = less risk
+        # Max 8% stop cap (v3 protocol — prevents catastrophic losses on wide-range days)
+        max_stop = entry * 0.92
+        stop = max(stop, max_stop)
         if stop >= entry:  # edge case: stock already below stop
             stop = entry * 0.97
         # Target: 2:1 R:R

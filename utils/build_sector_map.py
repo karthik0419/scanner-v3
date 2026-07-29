@@ -191,8 +191,31 @@ YF_INDUSTRY_TO_SECTOR = {
 # Stocks where yfinance is known to be wrong — manual overrides
 # (symbol without .NS -> correct sector)
 MANUAL_OVERRIDES = {
-    'ZAGGLE':    'Banking',    # Fintech/payments — yfinance says Software, but trades with financials
+    'ZAGGLE':    'Financial Services',  # Fintech/payments — yfinance says Software
     'KAYNES':    'IT',         # Electronic manufacturing services — NSE says Capital Goods, but it's tech
+}
+
+# Non-bank financials to reclassify from Banking → Financial Services.
+# These are NOT banks/lenders — they are brokers, exchanges, AMCs, insurers,
+# fintech, ratings agencies. They ride the ^NSEBANK heat-map signal (set in
+# sector_rotation_v3.py) but get a more accurate sector label.
+# Banks, NBFCs (lenders), and HFCs stay in 'Banking'.
+RECLASSIFY_TO_FIN_SERV = {
+    # Brokers / capital markets
+    '360ONE', 'ANANDRATHI', 'ANGELONE', 'BIRLAMONEY', 'EMKAY', 'IIFL',
+    'NUVAMA', 'BFINVEST', 'FEDFINA', 'JMFINANCIL', 'TATAINVEST',
+    # Exchanges & market infrastructure
+    'BSE', 'CAMS', 'CDSL', 'IEX', 'KFINTECH', 'MCX', 'GROWW',
+    # Asset managers
+    'ABSLAMC', 'HDFCAMC', 'ICICIAMC', 'NAM-INDIA', 'UTIAMC', 'MFSL',
+    # Insurance
+    'CANHLIFE', 'GICRE', 'GODIGIT', 'HDFCLIFE', 'ICICIGI', 'ICICIPRULI',
+    'LICI', 'NIACL', 'NIVABUPA', 'SBICARD', 'SBILIFE', 'STARHEALTH',
+    'POLICYBZR',
+    # Fintech / payments
+    'PAYTM', 'PINELABS', 'ZAGGLE',
+    # Ratings / research
+    'CRISIL',
 }
 
 
@@ -253,6 +276,19 @@ def build_sector_map(extra_symbols=None):
     for sym, sector in MANUAL_OVERRIDES.items():
         sector_map[sym] = sector
         print(f"  Override: {sym} -> {sector}")
+
+    # 3b. Reclassify non-bank financials: Banking → Financial Services
+    moved = 0
+    for sym in RECLASSIFY_TO_FIN_SERV:
+        if sym in sector_map and sector_map[sym] == 'Banking':
+            sector_map[sym] = 'Financial Services'
+            moved += 1
+        elif sym not in sector_map:
+            # Not in any index — force-map to Financial Services
+            sector_map[sym] = 'Financial Services'
+            moved += 1
+    if moved:
+        print(f"  Reclassified {moved} non-bank financials -> Financial Services")
 
     # 4. yfinance industry fallback for extra symbols not in any NSE index
     if extra_symbols:
@@ -339,17 +375,17 @@ def verify_picks(sector_map, symbol_industries):
         ('NETWORK18', 'Media'),
         ('ENIL', 'Media'),
         ('BCG', 'Media'),
-        ('BIRLAMONEY', 'Banking'),
+        ('BIRLAMONEY', 'Financial Services'),
         ('SURAJEST', 'Realty'),
-        ('ZAGGLE', 'Banking'),         # was wrongly IT
+        ('ZAGGLE', 'Financial Services'),  # was wrongly IT, then Banking, now Fin Serv
         ('MCLOUD', 'FMCG'),            # was wrongly IT (tea company!)
         ('RBA', 'Auto'),
         ('URJA', 'Energy'),            # was wrongly IT
-        ('FEDFINA', 'Banking'),
-        ('DHANBANK', 'Banking'),
+        ('FEDFINA', 'Financial Services'),
+        ('DHANBANK', 'Banking'),       # actual bank — stays Banking
         ('SUNTECK', 'Realty'),
-        ('BFINVEST', 'Banking'),
-        ('EMKAY', 'Banking'),
+        ('BFINVEST', 'Financial Services'),
+        ('EMKAY', 'Financial Services'),
         ('KAYNES', 'IT'),
         ('KSCL', 'Metals'),
         ('ACL', 'Auto'),               # was wrongly Metals (auto glass)

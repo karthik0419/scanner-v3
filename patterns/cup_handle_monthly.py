@@ -19,8 +19,8 @@ def detect_cup_handle_monthly(df_monthly):
         handle_bars    = 3,                          # 3-month handle
         min_depth      = 0.20,
         max_depth      = 0.95,                       # very deep multi-year bases
-        near_pct       = 0.20,
-        near_pct_watch = 0.35,
+        near_pct       = 0.05,                       # was 0.20 — NEAR means within 5% of breakout
+        near_pct_watch = 0.10,                       # was 0.35 — WATCH means within 10%
         min_bars       = 18,
     )
     if result:

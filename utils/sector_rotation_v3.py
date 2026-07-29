@@ -15,19 +15,23 @@ import yfinance as yf
 import pandas as pd
 
 # NSE Sector indices on yfinance
+# 'Financial Services' has no dedicated NSE index — it rides ^NSEBANK
+# (non-bank financials: brokers, exchanges, AMC, insurance, fintech) since
+# they move in sympathy with the banking cluster.
 SECTOR_INDICES = {
-    'Banking':       '^NSEBANK',
-    'IT':            '^CNXIT',
-    'Pharma':        '^CNXPHARMA',
-    'Auto':          '^CNXAUTO',
-    'Metals':        '^CNXMETAL',
-    'FMCG':          '^CNXFMCG',
-    'Infra':         '^CNXINFRA',
-    'Realty':        '^CNXREALTY',
-    'Energy':        '^CNXENERGY',
-    'Media':         '^CNXMEDIA',
-    'MidCap':        '^NSEMDCP50',
-    'PSU Bank':      '^CNXPSUBANK',
+    'Banking':            '^NSEBANK',
+    'Financial Services': '^NSEBANK',
+    'IT':                 '^CNXIT',
+    'Pharma':             '^CNXPHARMA',
+    'Auto':               '^CNXAUTO',
+    'Metals':             '^CNXMETAL',
+    'FMCG':               '^CNXFMCG',
+    'Infra':              '^CNXINFRA',
+    'Realty':             '^CNXREALTY',
+    'Energy':             '^CNXENERGY',
+    'Media':              '^CNXMEDIA',
+    'MidCap':             '^NSEMDCP50',
+    'PSU Bank':           '^CNXPSUBANK',
 }
 
 # Load authoritative NSE sector mapping (built by utils/build_sector_map.py)
@@ -52,13 +56,13 @@ _load_nse_sectors()
 YF_INDUSTRY_TO_SECTOR = {
     'Banks - Regional':                      'Banking',
     'Banks - Diversified':                   'Banking',
-    'Capital Markets':                       'Banking',
     'Credit Services':                       'Banking',
-    'Asset Management':                      'Banking',
-    'Insurance - Diversified':               'Banking',
-    'Insurance - Life':                      'Banking',
-    'Financial Data & Stock Exchanges':      'Banking',
-    'Financial Conglomerates':               'Banking',
+    'Capital Markets':                       'Financial Services',
+    'Asset Management':                      'Financial Services',
+    'Insurance - Diversified':               'Financial Services',
+    'Insurance - Life':                      'Financial Services',
+    'Financial Data & Stock Exchanges':      'Financial Services',
+    'Financial Conglomerates':               'Financial Services',
     'Information Technology Services':       'IT',
     'Software - Infrastructure':             'IT',
     'Software - Application':                'IT',

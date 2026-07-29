@@ -64,7 +64,8 @@ def init_tracker(csv_path=None):
         "symbol":          df["symbol"],
         "pattern":         df["pattern"],
         "status_at_scan":  df["status"],
-        "entry_price":     df["cmp"],          # entry = CMP at scan time (paper)
+        "breakout_level":  df["breakout"],       # for NEAR picks — wait for breakout
+        "entry_price":     df["cmp"],             # entry = CMP (BREAKOUT) or breakout price (NEAR, entered later)
         "stop_loss":       df["stop_loss"],
         "target_1":        df["target_1"],
         "target_2":        df["target_2"],
@@ -75,8 +76,8 @@ def init_tracker(csv_path=None):
         "rr":              df["rr"],
         "score":           df["score"],
         "sector":          df.get("sector", ""),
-        "current_price":   df["cmp"],          # initially same as entry
-        "current_status":  "OPEN",
+        "current_price":   df["cmp"],             # initially same as entry
+        "current_status":  "OPEN",                # BREAKOUT = OPEN immediately, NEAR = WAITING_BREAKOUT
         "current_pnl_pct": 0.0,
         "days_held":       0,
         "exit_price":      None,
@@ -84,6 +85,13 @@ def init_tracker(csv_path=None):
         "exit_reason":     None,
         "tradeable":       df["risk_%"].apply(tradeability),
     })
+
+    # NEAR picks start as WAITING_BREAKOUT — only enter when price crosses breakout level
+    # BREAKOUT picks start as OPEN — entered immediately at CMP
+    # WATCH picks start as WATCH — not traded yet, waiting for NEAR/BREAKOUT
+    tracker.loc[tracker["status_at_scan"] == "NEAR", "current_status"] = "WAITING_BREAKOUT"
+    tracker.loc[tracker["status_at_scan"] == "WATCH", "current_status"] = "WATCH"
+    tracker.loc[tracker["status_at_scan"] == "NEAR", "entry_price"] = tracker.loc[tracker["status_at_scan"] == "NEAR", "breakout_level"]
 
     tracker.to_csv(TRACKER_PATH, index=False)
     print(f"Tracker initialized: {TRACKER_PATH}")
@@ -109,8 +117,37 @@ def update_tracker(manual_prices=None):
 
     updated = 0
     for idx, row in tracker.iterrows():
-        if row["current_status"] != "OPEN":
+        if row["current_status"] in ("LOSS", "WIN_T1", "WIN_T2", "TIME_EXIT", "RE_ENTERED"):
+            # Check if a STOPPED_OUT trade should re-enter (stock recovered above breakout)
+            if row["current_status"] == "LOSS" and row.get("exit_reason") == "Stop Loss":
+                breakout_level = float(row.get("breakout_level", 0) or 0)
+                if breakout_level > 0:
+                    sym = row["symbol"]
+                    try:
+                        df_temp = _fetch_nse(sym, days=5)
+                        if df_temp is not None and not df_temp.empty:
+                            cur_price = float(df_temp["Close"].iloc[-1])
+                            scan_dt = datetime.fromisoformat(row["scan_date"]).date()
+                            days_since_sl = (today - scan_dt).days
+                            if days_since_sl <= 30 and cur_price >= breakout_level:
+                                # Re-entry! Stock recovered above breakout after SL hit
+                                tracker.at[idx, "current_status"] = "RE_ENTERED"
+                                tracker.at[idx, "entry_price"] = round(breakout_level, 2)
+                                tracker.at[idx, "stop_loss"] = round(breakout_level * 0.98, 2)  # tight 2% stop
+                                tracker.at[idx, "current_price"] = round(cur_price, 2)
+                                tracker.at[idx, "current_pnl_pct"] = 0.0
+                                tracker.at[idx, "days_held"] = 0
+                                tracker.at[idx, "exit_price"] = None
+                                tracker.at[idx, "exit_date"] = None
+                                tracker.at[idx, "exit_reason"] = None
+                                updated += 1
+                                print(f"  [RE-ENTRY] {sym} recovered to {cur_price:.2f} >= breakout {breakout_level:.2f}")
+                    except Exception:
+                        pass
             continue
+
+        if row["current_status"] == "WATCH":
+            continue  # not traded yet
 
         sym = row["symbol"]
         if manual_prices and sym in manual_prices:
@@ -129,8 +166,25 @@ def update_tracker(manual_prices=None):
         stop = float(row["stop_loss"])
         t1 = float(row["target_1"])
         t2 = float(row["target_2"])
+        breakout = float(row.get("breakout_level", 0) or 0)
         scan_dt = datetime.fromisoformat(row["scan_date"]).date()
         days_held = (today - scan_dt).days
+
+        # WAITING_BREAKOUT: check if stock has broken out → enter trade
+        if row["current_status"] == "WAITING_BREAKOUT":
+            if current_price >= breakout:
+                # Breakout confirmed! Enter the trade at breakout level
+                tracker.at[idx, "current_status"] = "OPEN"
+                tracker.at[idx, "entry_price"] = round(breakout, 2)
+                tracker.at[idx, "days_held"] = 0
+                entry = breakout  # update for P&L calc below
+                print(f"  [BREAKOUT] {sym} broke out to {current_price:.2f} >= {breakout:.2f} — entered")
+            else:
+                # Still waiting for breakout
+                tracker.at[idx, "current_price"] = round(current_price, 2)
+                tracker.at[idx, "current_pnl_pct"] = round((current_price - breakout) / breakout * 100, 2)
+                updated += 1
+                continue
 
         pnl_pct = round((current_price - entry) / entry * 100, 2)
 
