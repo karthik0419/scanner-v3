@@ -15,54 +15,56 @@ echo   1.  Full scan (all NSE stocks, top 30)
 echo   2.  Full scan + price filter (100-400 Rs)
 echo   3.  Full scan + custom price range
 echo   4.  Nifty 200 scan + price filter (faster, ~5 min)
-echo   5.  Custom stock list scan
-echo   6.  Bearish scan (short setups in weak sectors)
-echo   7.  Quick test (50 stocks only)
-echo   8.  Scan by timeframe (daily / weekly / monthly only)
+echo   5.  Smart scan + price filter (adapts to today's hot sectors)
+echo   6.  Custom stock list scan
+echo   7.  Bearish scan (short setups in weak sectors)
+echo   8.  Quick test (50 stocks only)
+echo   9.  Scan by timeframe (daily / weekly / monthly only)
 echo.
 echo   --- Backtest ---
-echo   9.  Backtest v3.1 vs v2 (backbone50, in-sample, ~5 min)
-echo  10.  Backtest v3.1 vs v2 (nifty200, out-of-sample, ~15 min)
-echo  11.  Backtest v3.1 only (backbone50, ~3 min)
-echo  12.  ATR multiplier sweep (find optimal stop distance)
+echo  10.  Backtest v3.1 vs v2 (backbone50, in-sample, ~5 min)
+echo  11.  Backtest v3.1 vs v2 (nifty200, out-of-sample, ~15 min)
+echo  12.  Backtest v3.1 only (backbone50, ~3 min)
+echo  13.  ATR multiplier sweep (find optimal stop distance)
 echo.
 echo  --- Paper Tracker ---
-echo  13.  Update prices + show status (run daily after market close)
-echo  14.  Sync tracker with latest scan (merge new picks)
-echo  15.  Initialize tracker from latest scan (REPLACES existing)
-echo  16.  Show tracker status only
-echo  17.  Show tracker summary (one-line)
+echo  14.  Update prices + show status (run daily after market close)
+echo  15.  Sync tracker with latest scan (merge new picks)
+echo  16.  Initialize tracker from latest scan (REPLACES existing)
+echo  17.  Show tracker status only
+echo  18.  Show tracker summary (one-line)
 echo.
 echo  --- Analysis Tools ---
-echo  18.  Whipsaw analysis (find SL exits that would have hit target)
-echo  19.  Rank today's picks by 2-week profit potential
-echo  20.  Generate charts for latest scan
+echo  19.  Whipsaw analysis (find SL exits that would have hit target)
+echo  20.  Rank today's picks by 2-week profit potential
+echo  21.  Generate charts for latest scan
 echo.
-echo  21.  Exit
+echo  22.  Exit
 echo.
-set /p choice="  Enter choice [1-21]: "
+set /p choice="  Enter choice [1-22]: "
 
 if "%choice%"=="1" goto FULL_SCAN
 if "%choice%"=="2" goto PRICE_FILTER
 if "%choice%"=="3" goto CUSTOM_PRICE
 if "%choice%"=="4" goto NIFTY200
-if "%choice%"=="5" goto CUSTOM_STOCKS
-if "%choice%"=="6" goto BEARISH
-if "%choice%"=="7" goto TEST_MODE
-if "%choice%"=="8" goto TIMEFRAME_SCAN
-if "%choice%"=="9" goto BACKTEST_COMPARE
-if "%choice%"=="10" goto BACKTEST_NIFTY200
-if "%choice%"=="11" goto BACKTEST_V3
-if "%choice%"=="12" goto SWEEP_ATR
-if "%choice%"=="13" goto PAPER_UPDATE
-if "%choice%"=="14" goto PAPER_SYNC
-if "%choice%"=="15" goto PAPER_INIT
-if "%choice%"=="16" goto PAPER_STATUS
-if "%choice%"=="17" goto PAPER_SUMMARY
-if "%choice%"=="18" goto WHIPSAW
-if "%choice%"=="19" goto RANK_2WEEK
-if "%choice%"=="20" goto GEN_CHARTS
-if "%choice%"=="21" exit /b 0
+if "%choice%"=="5" goto SMART_SCAN
+if "%choice%"=="6" goto CUSTOM_STOCKS
+if "%choice%"=="7" goto BEARISH
+if "%choice%"=="8" goto TEST_MODE
+if "%choice%"=="9" goto TIMEFRAME_SCAN
+if "%choice%"=="10" goto BACKTEST_COMPARE
+if "%choice%"=="11" goto BACKTEST_NIFTY200
+if "%choice%"=="12" goto BACKTEST_V3
+if "%choice%"=="13" goto SWEEP_ATR
+if "%choice%"=="14" goto PAPER_UPDATE
+if "%choice%"=="15" goto PAPER_SYNC
+if "%choice%"=="16" goto PAPER_INIT
+if "%choice%"=="17" goto PAPER_STATUS
+if "%choice%"=="18" goto PAPER_SUMMARY
+if "%choice%"=="19" goto WHIPSAW
+if "%choice%"=="20" goto RANK_2WEEK
+if "%choice%"=="21" goto GEN_CHARTS
+if "%choice%"=="22" exit /b 0
 echo  Invalid choice.
 pause
 goto MENU
@@ -115,9 +117,24 @@ goto MENU
 :NIFTY200
 cls
 echo  === NIFTY 200 SCAN - Price filter 100-400 Rs (~5 min) ===
-echo  (Faster than full universe - 178 stocks instead of 2000+)
+echo  (Static list of 178 stocks — does not adapt to market heat)
 echo.
 python scanner.py --top 30 --min-score 50 --min-price 100 --max-price 400 --stocks nifty200.txt
+if errorlevel 1 echo  Scanner failed. & pause & goto MENU
+echo.
+python gen_charts.py
+start "" "results"
+echo  SCAN COMPLETE
+pause
+goto MENU
+
+:SMART_SCAN
+cls
+echo  === SMART SCAN - Adapts to today's hot sectors ===
+echo  Universe: Backbone50 + Nifty500 + ALL stocks in today's hot sectors
+echo  Changes daily based on which sectors are booming
+echo.
+python scanner.py --top 30 --min-score 50 --min-price 100 --max-price 400 --smart
 if errorlevel 1 echo  Scanner failed. & pause & goto MENU
 echo.
 python gen_charts.py
@@ -129,8 +146,7 @@ goto MENU
 :CUSTOM_STOCKS
 cls
 echo  === CUSTOM STOCK LIST SCAN ===
-echo.
-echo  Available lists: backbone50.txt, nifty200.txt, nifty500.txt
+echo  Available: backbone50.txt, nifty200.txt, nifty500.txt
 echo  Or enter your own file path (one symbol per line)
 echo.
 set /p stockfile="  Enter stock list file: "

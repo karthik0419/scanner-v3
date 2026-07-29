@@ -360,6 +360,8 @@ def main():
                         help="Skip Telegram notification (default: auto-send on completion)")
     parser.add_argument("--no-sync",    action="store_true",
                         help="Skip paper tracker sync (default: auto-sync on completion)")
+    parser.add_argument("--smart",      action="store_true",
+                        help="Use smart universe: Backbone50 + Nifty500 + hot sector stocks (adapts daily)")
     parser.add_argument("--timeframe",  type=str,  default="all",
                         choices=["all", "daily", "weekly", "monthly"],
                         help="Filter by timeframe: all (default), daily, weekly, monthly")
@@ -378,7 +380,63 @@ def main():
     print_regime_banner(regime, bearish=args.bearish)
 
     print("\n[1/4] Loading NSE EQ universe...")
-    if args.stocks:
+    if args.smart:
+        # Smart universe: Backbone50 + Nifty500 + ALL stocks in today's hot sectors
+        # Adapts daily to market heat — not a static list
+        import os, json
+        from utils.sector_rotation_v3 import get_sector_heat
+        # Load backbone
+        backbone_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backbone50.txt")
+        if os.path.exists(backbone_path):
+            with open(backbone_path) as f:
+                backbone = [l.strip() for l in f if l.strip() and not l.startswith('#')]
+            backbone = [s if s.endswith('.NS') else s + '.NS' for s in backbone]
+        else:
+            backbone = []
+        # Load nifty500
+        n500_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "nifty500.txt")
+        n500 = []
+        if os.path.exists(n500_path):
+            with open(n500_path) as f:
+                n500 = [l.strip() for l in f if l.strip() and not l.startswith('#')]
+            n500 = [s if s.endswith('.NS') else s + '.NS' for s in n500]
+        # Get today's hot sectors from sector heat
+        try:
+            heat = get_sector_heat()
+            # heat is dict of {sector: {'5d': pct, '20d': pct, 'signal': str}}
+            sector_perf = [(s, d.get('5d', 0), d.get('signal', '')) for s, d in heat.items()]
+            sector_perf.sort(key=lambda x: x[1], reverse=True)
+            hot_sectors = [s for s, p, _ in sector_perf[:2] if p > 0]
+            print(f"  Hot sectors today: {', '.join(hot_sectors)}")
+            # Load sector stock map
+            sectors_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "nse_sectors.json")
+            hot_stocks = []
+            if os.path.exists(sectors_file):
+                with open(sectors_file) as f:
+                    stock_sectors = json.load(f)
+                # Map sector names (heat uses short names like 'IT', 'BANK')
+                SECTOR_NAME_MAP = {
+                    'METAL': 'Metals', 'AUTO': 'Auto', 'BANK': 'Banking',
+                    'IT': 'IT', 'PHARMA': 'Pharma', 'FMCG': 'FMCG',
+                    'REALTY': 'Realty', 'ENERGY': 'Energy', 'INFRA': 'Infra',
+                    'MEDIA': 'Media', 'PSU': 'PSU Bank', 'MIDCAP': 'MidCap',
+                    'FINANCIAL SERVICES': 'Banking', 'BANK NIFTY': 'Banking',
+                }
+                target = set()
+                for s in hot_sectors:
+                    target.add(SECTOR_NAME_MAP.get(s.upper(), s.capitalize()))
+                for sym_ns, sector in stock_sectors.items():
+                    if sector in target:
+                        sym = sym_ns if sym_ns.endswith('.NS') else sym_ns + '.NS'
+                        hot_stocks.append(sym)
+            print(f"  Hot sector stocks: {len(hot_stocks)}")
+        except Exception as e:
+            print(f"  Sector heat unavailable ({e}) — using backbone + nifty500 only")
+            hot_stocks = []
+        # Combine + dedupe
+        symbols = list(dict.fromkeys(backbone + n500 + hot_stocks))
+        print(f"  Smart universe: {len(backbone)} backbone + {len(n500)} nifty500 + {len(hot_stocks)} hot sector = {len(symbols)} stocks")
+    elif args.stocks:
         # Use custom stock list file (one symbol per line, with or without .NS)
         import os
         if os.path.exists(args.stocks):

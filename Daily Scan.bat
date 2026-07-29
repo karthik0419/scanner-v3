@@ -21,25 +21,26 @@ echo   6.  Daily bearish scan (weak sectors + short candidates)
 echo   7.  Sector rotation heatmap only
 echo.
 echo   --- Pattern Scan (produces CSV + auto-syncs tracker) ---
-echo   8.  Nifty 200 pattern scan + price filter (~5 min)
-echo   9.  Full NSE pattern scan + price filter (slower)
-echo  10.  Custom stock list pattern scan
+echo   8.  Smart pattern scan + price filter (adapts to hot sectors)
+echo   9.  Nifty 200 pattern scan + price filter (static list, ~5 min)
+echo  10.  Full NSE pattern scan + price filter (slower)
+echo  11.  Custom stock list pattern scan
 echo.
 echo  --- Paper Tracker ---
-echo  11. Update prices + show status (run EOD daily)
-echo  12. Sync tracker with latest scan (merge new picks)
-echo  13. Initialize tracker from latest scan (REPLACES existing)
-echo  14. Show tracker status only
-echo  15. Show tracker summary (one-line)
+echo  12. Update prices + show status (run EOD daily)
+echo  13. Sync tracker with latest scan (merge new picks)
+echo  14. Initialize tracker from latest scan (REPLACES existing)
+echo  15. Show tracker status only
+echo  16. Show tracker summary (one-line)
 echo.
 echo  --- Analysis Tools ---
-echo  16. Rank today's picks by 2-week profit potential
-echo  17. Generate charts for latest scan
-echo  18. Telegram alert for latest scan picks
+echo  17. Rank today's picks by 2-week profit potential
+echo  18. Generate charts for latest scan
+echo  19. Telegram alert for latest scan picks
 echo.
-echo  19.  Exit
+echo  20.  Exit
 echo.
-set /p choice="  Enter choice [1-19]: "
+set /p choice="  Enter choice [1-20]: "
 
 if "%choice%"=="1" goto DAILY_DEFAULT
 if "%choice%"=="2" goto DAILY_FULL
@@ -48,18 +49,19 @@ if "%choice%"=="4" goto DAILY_CUSTOM_PRICE
 if "%choice%"=="5" goto DAILY_SECTOR
 if "%choice%"=="6" goto DAILY_BEARISH
 if "%choice%"=="7" goto SECTOR_HEAT
-if "%choice%"=="8" goto PATTERN_NIFTY200
-if "%choice%"=="9" goto PATTERN_FULL
-if "%choice%"=="10" goto PATTERN_CUSTOM
-if "%choice%"=="11" goto PAPER_UPDATE
-if "%choice%"=="12" goto PAPER_SYNC
-if "%choice%"=="13" goto PAPER_INIT
-if "%choice%"=="14" goto PAPER_STATUS
-if "%choice%"=="15" goto PAPER_SUMMARY
-if "%choice%"=="16" goto RANK_2WEEK
-if "%choice%"=="17" goto GEN_CHARTS
-if "%choice%"=="18" goto TELEGRAM
-if "%choice%"=="19" exit /b 0
+if "%choice%"=="8" goto PATTERN_SMART
+if "%choice%"=="9" goto PATTERN_NIFTY200
+if "%choice%"=="10" goto PATTERN_FULL
+if "%choice%"=="11" goto PATTERN_CUSTOM
+if "%choice%"=="12" goto PAPER_UPDATE
+if "%choice%"=="13" goto PAPER_SYNC
+if "%choice%"=="14" goto PAPER_INIT
+if "%choice%"=="15" goto PAPER_STATUS
+if "%choice%"=="16" goto PAPER_SUMMARY
+if "%choice%"=="17" goto RANK_2WEEK
+if "%choice%"=="18" goto GEN_CHARTS
+if "%choice%"=="19" goto TELEGRAM
+if "%choice%"=="20" exit /b 0
 echo  Invalid choice.
 pause
 goto MENU
@@ -131,9 +133,26 @@ python -c "from utils.sector_rotation_v3 import print_sector_heatmap, get_weak_s
 pause
 goto MENU
 
+:PATTERN_SMART
+cls
+echo  === SMART PATTERN SCAN - Adapts to today's hot sectors ===
+echo  Universe: Backbone50 + Nifty500 + ALL stocks in today's hot sectors
+echo  Changes daily based on which sectors are booming
+echo  (Scanner auto-syncs paper tracker + sends Telegram)
+echo.
+python scanner.py --top 30 --min-score 50 --min-price 100 --max-price 400 --smart
+if errorlevel 1 echo  Scanner failed. & pause & goto MENU
+echo.
+python gen_charts.py
+start "" "results"
+echo  SCAN COMPLETE - CSV saved, tracker synced, Telegram sent
+pause
+goto MENU
+
 :PATTERN_NIFTY200
 cls
 echo  === NIFTY 200 PATTERN SCAN - Price filter 100-400 Rs (~5 min) ===
+echo  (Static list of 178 stocks - does not adapt to market heat)
 echo  (Scanner auto-syncs paper tracker + sends Telegram)
 echo.
 python scanner.py --top 30 --min-score 50 --min-price 100 --max-price 400 --stocks nifty200.txt
@@ -141,7 +160,7 @@ if errorlevel 1 echo  Scanner failed. & pause & goto MENU
 echo.
 python gen_charts.py
 start "" "results"
-echo  SCAN COMPLETE - CSV saved, tracker synced, Telegram sent
+echo  SCAN COMPLETE
 pause
 goto MENU
 
