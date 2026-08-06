@@ -81,17 +81,27 @@ def send_telegram(token, chat_id, text):
 
 
 def format_message(df, top):
+    """Format scan results for Telegram.
+
+    Enhanced (2026-08-06) with learnings from chart analysis:
+    - Target shown as T1 → T2 range on one line (e.g. "₹595 → ₹679")
+    - % of measured move done / left (e.g. "12% done, 88% left")
+    - Upside remaining from CMP (e.g. "+24.1% left to T2")
+    - Flags: [S] Sustained, [N] Nested cup, [D] Double confirm
+    - Historical resistance note if near T2 (~R2990)
+    - Action line: BUY NOW vs BUY ABOVE ₹X
+    """
     rows = df.head(top)
-    medals = ["🥇", "🥈", "🥉"] + [f"{i+1}⃣" for i in range(3, top)]
+    medals = ["1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10."]
 
     lines = [
-        f"<b>📊 [V3] WEEKLY SWING SCAN — {date.today().strftime('%d %b %Y')}</b>",
-        f"🔍 Scanned: Full NSE EQ (~2000+ stocks) | Found: {len(df)} setups",
+        f"<b>📊 SCANNER v3.1 — {date.today().strftime('%d %b %Y')}</b>",
+        f"<b>Found: {len(df)} setups  |  Showing top {min(top, len(df))}</b>",
         "",
     ]
 
     for i, (_, row) in enumerate(rows.iterrows()):
-        medal = medals[i] if i < len(medals) else f"{i+1}."
+        num   = medals[i] if i < len(medals) else f"{i+1}."
         sym   = str(row["symbol"]).replace(".NS", "")
         pat   = str(row["pattern"])
         score = row["score"]
@@ -99,34 +109,90 @@ def format_message(df, top):
         cmp   = row["cmp"]
         entry = row["breakout"]
         stop  = row["stop_loss"]
-        tgt   = row.get("target_1", row.get("target", 0))
-        up    = row["upside_%"]
+        t1    = row.get("target_1", row.get("target", 0))
+        t2    = row.get("target_2", t1)
+        status = str(row.get("status", ""))
 
-        sector = str(row.get("sector",""))
-        signal = str(row.get("sector_signal",""))
-        neckline = str(row.get("neckline",""))
-        sec_icon = "🔥" if signal=="BOOM" else "↑" if signal=="RISING" else "↓" if signal=="COOLING" else "🔴" if signal=="WEAK" else ""
-        sec_line = f"🏭 {sector} {sec_icon} {signal}" if sector and sector not in ("","Unknown","nan") else ""
-        neck_line = f"📐 Neckline: {neckline}" if neckline and neckline not in ("","nan") else ""
+        sector  = str(row.get("sector", ""))
+        signal  = str(row.get("sector_signal", ""))
+        tf      = str(row.get("timeframe", "Daily"))
 
-        tf = str(row.get("timeframe", ""))
-        tf_label = f" [{tf}]" if tf and tf not in ("", "nan") else ""
+        # New fields (may not exist in older CSVs — use .get with defaults)
+        pct_done        = row.get("pct_done", 0)
+        pct_left        = row.get("pct_left", 100)
+        upside_rem      = row.get("upside_remaining", row.get("upside_%", 0))
+        sustained       = str(row.get("sustained", "False")).lower() == "true"
+        nested          = str(row.get("nested_cup", "False")).lower() == "true"
+        double_confirm  = str(row.get("double_confirm", "False")).lower() == "true"
+        hist_resist     = row.get("hist_resist", "")
+
+        # Sector icon
+        sec_icon = {"BOOM": "🔥", "RISING": "↑", "COOLING": "↓", "WEAK": "🔴"}.get(signal, "")
+
+        # Flags string
+        flag_parts = []
+        if sustained:      flag_parts.append("[S]")
+        if nested:         flag_parts.append("[N]")
+        if double_confirm: flag_parts.append("[D]")
+        flags = " ".join(flag_parts)
+
+        # Historical resistance note
+        resist_note = ""
+        if hist_resist and str(hist_resist) not in ("", "nan", "0", "0.0"):
+            try:
+                resist_note = f"  ~prior resistance ₹{float(hist_resist):.0f}"
+            except Exception:
+                pass
+
+        # Action line
+        if status == "BREAKOUT":
+            action = f"BUY NOW at ₹{cmp}"
+        else:
+            action = f"BUY above ₹{entry}"
+
+        # Risk %
+        risk_pct = round((entry - stop) / entry * 100, 1) if entry > 0 else 0
+
         msg_lines = [
             "━━━━━━━━━━━━━━━━━━━",
-            f"{medal} <b>{sym}</b> | Score: {score} | {pat}{tf_label}",
+            f"{num} <b>{sym}</b>  Score {score}  {pat} [{tf}]  {flags}",
         ]
-        if sec_line: msg_lines.append(sec_line)
-        if neck_line: msg_lines.append(neck_line)
-        msg_lines += [
-            f"💰 CMP: ₹{cmp}  |  Entry: ₹{entry}",
-            f"🛑 Stop: ₹{stop}  |  🎯 T1: ₹{tgt}",
-            f"📈 Upside: {up}%  |  RR: {rr}x",
-        ]
+
+        # Sector line
+        if sector and sector not in ("", "Unknown", "nan"):
+            msg_lines.append(f"   🏭 {sector} {sec_icon} {signal}")
+
+        # CMP + action
+        msg_lines.append(f"   💰 CMP ₹{cmp}  →  {action}")
+
+        # Stop + Target (T1→T2 on one line)
+        t2_str = f" → ₹{t2}" if t2 and t2 != t1 else ""
+        msg_lines.append(f"   🛑 SL ₹{stop} ({risk_pct}% risk)  |  🎯 Target ₹{t1}{t2_str}")
+
+        # Move progress + upside remaining
+        try:
+            done_val = float(pct_done)
+            left_val = float(pct_left)
+            rem_val  = float(upside_rem)
+            msg_lines.append(
+                f"   📊 Move: {done_val:.0f}% done, {left_val:.0f}% left  |  +{rem_val:.1f}% to T2"
+            )
+        except Exception:
+            pass
+
+        # R:R
+        msg_lines.append(f"   📈 R:R 1:{rr}")
+
+        # Resist note
+        if resist_note:
+            msg_lines.append(f"   ⚠️{resist_note}")
+
         lines += msg_lines
 
     lines += [
         "━━━━━━━━━━━━━━━━━━━",
         "",
+        "<b>FLAGS:</b> [S]=Breakout sustained (10+ days)  [N]=Nested cup  [D]=Double confirm",
         "⚠️ For research only. Not financial advice.",
     ]
     return "\n".join(lines)

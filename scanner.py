@@ -383,7 +383,7 @@ def main():
     if args.smart:
         # Smart universe: Backbone50 + Nifty500 + ALL stocks in today's hot sectors
         # Adapts daily to market heat — not a static list
-        import os, json
+        import json
         from utils.sector_rotation_v3 import get_sector_heat
         # Load backbone
         backbone_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backbone50.txt")
@@ -438,7 +438,6 @@ def main():
         print(f"  Smart universe: {len(backbone)} backbone + {len(n500)} nifty500 + {len(hot_stocks)} hot sector = {len(symbols)} stocks")
     elif args.stocks:
         # Use custom stock list file (one symbol per line, with or without .NS)
-        import os
         if os.path.exists(args.stocks):
             with open(args.stocks) as f:
                 symbols = [l.strip() for l in f if l.strip() and not l.startswith('#')]
@@ -497,6 +496,7 @@ def main():
 
             cmp  = result.get("cmp", 0)
             t1   = result.get("target_1", 0)
+            t2   = result.get("target_2", 0)
             stop = result.get("stop_loss", 0)
             bo   = result.get("breakout", 0)
 
@@ -509,6 +509,11 @@ def main():
             dist_pct = abs(bo - cmp) / cmp * 100 if bo and cmp else 0
             if bo > 0 and dist_pct > 8 and result.get("status") != "BREAKOUT":
                 continue  # too far from breakout to be actionable
+
+            # Learning #8: Skip if <10% upside remaining from CMP to T2
+            upside_remaining = (t2 - cmp) / cmp * 100 if cmp and t2 > cmp else 0
+            if upside_remaining < 10:
+                continue  # most of move already done — not worth entering
 
             below_cutoff = score < args.min_score
 
@@ -523,26 +528,91 @@ def main():
             if args.bearish and sector_signal not in ("WEAK", "COOLING"):
                 continue
 
+            # Learning #1: % of measured move done / left
+            measured_move = t2 - bo if (t2 > bo and bo > 0) else 0
+            pct_done = round((cmp - bo) / measured_move * 100, 1) if measured_move > 0 else 0.0
+            pct_left = round(100 - pct_done, 1)
+
+            # Learning #4: Breakout sustained — held above BO ≥10 trading days
+            sustained = False
+            if bo > 0 and len(df) >= 20:
+                days_above = int((df['Close'].tail(20) >= bo).sum())
+                sustained = days_above >= 10
+
+            # Learning #5: Nested cup — run a second cup length to detect nesting
+            nested = False
+            try:
+                from patterns.cup_handle import detect_cup_handle
+                from patterns.cup_handle_monthly import detect_cup_handle_monthly, resample_monthly
+                # Count how many cup detectors fire on this stock
+                cup_hits = 0
+                if detect_cup_handle(df): cup_hits += 1
+                if detect_cup_handle_weekly(df_weekly): cup_hits += 1
+                dfm = resample_monthly(df)
+                if detect_cup_handle_monthly(dfm): cup_hits += 1
+                nested = cup_hits >= 2
+                if nested:
+                    score = round(min(score + (10 / 155 * 100), 100), 1)
+            except Exception:
+                pass
+
+            # Learning #3: Double confirmation — descending channel + S&R near same level
+            double_confirm = False
+            try:
+                from patterns.channel import detect_descending_channel
+                from patterns.sr_levels import detect_sr_levels
+                ch = detect_descending_channel(df)
+                sr = detect_sr_levels(df)
+                if ch and sr:
+                    ch_bo = ch.get('breakout', 0)
+                    sr_bo = sr.get('breakout', 0)
+                    if ch_bo > 0 and sr_bo > 0:
+                        diff_pct = abs(ch_bo - sr_bo) / ch_bo * 100
+                        if diff_pct < 2:
+                            double_confirm = True
+                            score = round(min(score + (15 / 155 * 100), 100), 1)
+            except Exception:
+                pass
+
+            # Learning #2: Historical resistance near T2
+            hist_resist = None
+            try:
+                if len(df) >= 100 and t2 > 0:
+                    hist = df.iloc[-200:-50] if len(df) >= 200 else df.iloc[:-50]
+                    if len(hist) > 0:
+                        prior_high = float(hist['High'].max())
+                        if abs(prior_high - t2) / t2 < 0.10:
+                            hist_resist = round(prior_high, 2)
+            except Exception:
+                pass
+
             # Use breakout as entry for upside/risk columns (where you'd actually enter)
             entry = bo if bo > 0 and bo <= cmp * 1.02 else cmp
             row = {
-                "symbol":         sym,
-                "pattern":        result.get("pattern"),
-                "timeframe":      result.get("timeframe", "Daily"),
-                "status":         result.get("status"),
-                "cmp":            round(cmp, 2),
-                "breakout":       round(bo, 2),
-                "stop_loss":      round(stop, 2),
-                "target_1":       round(t1, 2),
-                "target_2":       round(result.get("target_2", 0), 2),
-                "upside_%":       round((t1 - entry) / entry * 100, 2) if entry else 0,
-                "risk_%":         round((entry - stop) / entry * 100, 2) if entry else 0,
-                "rr":             rr,
-                "volume":         result.get("volume", False),
-                "neckline":       result.get("neckline_kind", ""),
-                "sector":         sector_name,
-                "sector_signal":  sector_signal,
-                "score":          score,
+                "symbol":           sym,
+                "pattern":          result.get("pattern"),
+                "timeframe":        result.get("timeframe", "Daily"),
+                "status":           result.get("status"),
+                "cmp":              round(cmp, 2),
+                "breakout":         round(bo, 2),
+                "stop_loss":        round(stop, 2),
+                "target_1":         round(t1, 2),
+                "target_2":         round(t2, 2),
+                "upside_%":         round((t1 - entry) / entry * 100, 2) if entry else 0,
+                "risk_%":           round((entry - stop) / entry * 100, 2) if entry else 0,
+                "upside_remaining": round(upside_remaining, 1),
+                "pct_done":         pct_done,
+                "pct_left":         pct_left,
+                "sustained":        sustained,
+                "nested_cup":       nested,
+                "double_confirm":   double_confirm,
+                "hist_resist":      hist_resist if hist_resist else "",
+                "rr":               rr,
+                "volume":           result.get("volume", False),
+                "neckline":         result.get("neckline_kind", ""),
+                "sector":           sector_name,
+                "sector_signal":    sector_signal,
+                "score":            score,
             }
             if "atr" in result:
                 row["atr"] = result["atr"]
@@ -550,8 +620,16 @@ def main():
                 all_results.append(row)
             else:
                 results.append(row)
-            print(f"  {sym:<20} FOUND | {result.get('pattern')} [{result.get('timeframe','Daily')}] | {result.get('status')} | "
-                  f"score={score} | rr={rr} | SL={stop}")
+
+            flags = ("".join([
+                " [S]" if sustained else "",
+                " [N]" if nested else "",
+                " [D]" if double_confirm else "",
+                f" ~R{hist_resist:.0f}" if hist_resist else "",
+            ])).strip()
+            print(f"  {sym:<20} FOUND | {result.get('pattern')} [{result.get('timeframe','Daily')}] | "
+                  f"{result.get('status')} | score={score} | rr={rr} | "
+                  f"{pct_done:.0f}%done {pct_left:.0f}%left | {flags}")
         except Exception:
             continue
 
