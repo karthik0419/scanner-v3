@@ -38,10 +38,12 @@ echo  --- Analysis Tools ---
 echo  19.  Whipsaw analysis (find SL exits that would have hit target)
 echo  20.  Rank today's picks by 2-week profit potential
 echo  21.  Generate charts for latest scan
+echo  22.  Enhanced scan (full 15-pattern + pct_done/left + [S][N][D] flags)
+echo  23.  Tracker status (send to Telegram)
 echo.
-echo  22.  Exit
+echo  24.  Exit
 echo.
-set /p choice="  Enter choice [1-22]: "
+set /p choice="  Enter choice [1-24]: "
 
 if "%choice%"=="1" goto FULL_SCAN
 if "%choice%"=="2" goto PRICE_FILTER
@@ -64,7 +66,9 @@ if "%choice%"=="18" goto PAPER_SUMMARY
 if "%choice%"=="19" goto WHIPSAW
 if "%choice%"=="20" goto RANK_2WEEK
 if "%choice%"=="21" goto GEN_CHARTS
-if "%choice%"=="22" exit /b 0
+if "%choice%"=="22" goto ENHANCED_SCAN
+if "%choice%"=="23" goto TRACKER_STATUS
+if "%choice%"=="24" exit /b 0
 echo  Invalid choice.
 pause
 goto MENU
@@ -322,5 +326,27 @@ echo.
 python gen_charts.py
 echo  Charts saved to results\charts\
 start "" "results\charts"
+pause
+goto MENU
+
+:ENHANCED_SCAN
+cls
+echo  === ENHANCED SCAN (full 15-pattern + pct_done/left + flags) ===
+echo  Runs full v3.1 engine on backbone50 + nifty200 (~5 min)
+echo  New: pct_done/left, [S] Sustained, [N] Nested cup, [D] Double confirm
+echo  Upside filter: skips picks with less than 10pct left to T2
+echo  Telegram sent automatically.
+echo.
+python _daily_scan_enhanced.py
+pause
+goto MENU
+
+:TRACKER_STATUS
+cls
+echo  === TRACKER STATUS + TELEGRAM ===
+echo  Shows open trades, waiting breakouts, wins, losses.
+echo  Sends formatted status to Telegram.
+echo.
+python _tracker_status.py
 pause
 goto MENU

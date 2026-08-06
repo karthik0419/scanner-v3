@@ -37,10 +37,12 @@ echo  --- Analysis Tools ---
 echo  17. Rank today's picks by 2-week profit potential
 echo  18. Generate charts for latest scan
 echo  19. Telegram alert for latest scan picks
+echo  20. Enhanced daily scan (full 15-pattern + pct_done/left + flags)
+echo  21. Tracker status (send to Telegram)
 echo.
-echo  20.  Exit
+echo  22. Exit
 echo.
-set /p choice="  Enter choice [1-20]: "
+set /p choice="  Enter choice [1-22]: "
 
 if "%choice%"=="1" goto DAILY_DEFAULT
 if "%choice%"=="2" goto DAILY_FULL
@@ -61,7 +63,9 @@ if "%choice%"=="16" goto PAPER_SUMMARY
 if "%choice%"=="17" goto RANK_2WEEK
 if "%choice%"=="18" goto GEN_CHARTS
 if "%choice%"=="19" goto TELEGRAM
-if "%choice%"=="20" exit /b 0
+if "%choice%"=="20" goto ENHANCED_SCAN
+if "%choice%"=="21" goto TRACKER_STATUS
+if "%choice%"=="22" exit /b 0
 echo  Invalid choice.
 pause
 goto MENU
@@ -267,5 +271,26 @@ echo  === TELEGRAM ALERT FOR LATEST SCAN ===
 echo  Sends top 10 picks from latest scan CSV to Telegram.
 echo.
 python telegram_notify.py
+pause
+goto MENU
+
+:ENHANCED_SCAN
+cls
+echo  === ENHANCED DAILY SCAN ===
+echo  Full 15-pattern detection on backbone50 + nifty200 (~5 min)
+echo  Includes: pct_done/left, [S][N][D] flags, hist resistance, upside filter
+echo  Telegram sent automatically.
+echo.
+python _daily_scan_enhanced.py
+pause
+goto MENU
+
+:TRACKER_STATUS
+cls
+echo  === TRACKER STATUS + TELEGRAM ===
+echo  Shows all open trades, waiting breakouts, wins, losses.
+echo  Sends current status to Telegram.
+echo.
+python _tracker_status.py
 pause
 goto MENU
