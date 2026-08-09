@@ -121,7 +121,7 @@ goto MENU
 :NIFTY200
 cls
 echo  === NIFTY 200 SCAN - Price filter 100-400 Rs (~5 min) ===
-echo  (Static list of 178 stocks — does not adapt to market heat)
+echo  (Static list of 178 stocks ? does not adapt to market heat)
 echo.
 python scanner.py --top 30 --min-score 50 --min-price 100 --max-price 400 --stocks nifty200.txt
 if errorlevel 1 echo  Scanner failed. & pause & goto MENU
