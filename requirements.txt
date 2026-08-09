@@ -7,6 +7,9 @@ yfinance>=0.2.30
 # NSE data (primary source)
 jugaad-data>=0.14
 
+# NSE bhavcopy download (bypasses Akamai bot protection)
+curl_cffi>=0.7
+
 # Charts (optional but recommended)
 matplotlib>=3.7
 mplfinance>=0.12.9b
