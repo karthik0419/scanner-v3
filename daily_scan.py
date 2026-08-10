@@ -142,6 +142,22 @@ def _load_weekly_scan_picks(max_stocks=50):
         return []
 
 
+def _load_weekly_scan_df():
+    """Load the latest weekly scan CSV as a DataFrame.
+    Returns (df, path) or (None, None) if not found."""
+    import glob
+    results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+    files = [f for f in glob.glob(os.path.join(results_dir, "v3_*.csv")) if "_all" not in f]
+    if not files:
+        return None, None
+    files.sort(key=lambda f: os.path.getmtime(f))
+    try:
+        df = pd.read_csv(files[-1])
+        return df, files[-1]
+    except Exception:
+        return None, None
+
+
 def _load_nifty500():
     """Load Nifty 500 stocks for broad coverage of liquid stocks."""
     fpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "nifty500.txt")
@@ -511,30 +527,111 @@ def _categorize_pick(r):
     return "FLAT"
 
 
-def _fmt_pick(r, show_plan=True):
-    """Format a stock pick for Telegram (SwingIQ format).
+def _fmt_pick_rich(row, vol_info=None):
+    """Format a stock pick using the weekly scan's rich format (same as
+    telegram_notify.py:format_message).
 
-    With trade plan (2 lines):
-      TATAINVEST   +3.98%  ·  16.3x vol
-      → Entry ₹693.65  |  SL ₹669.10  |  Tgt ₹742.75  |  R:R 2.0  |  Risk 3.5%
-
-    Without trade plan (1 line):
-      RATNAMANI   -7.30%  ·  12.6x vol  ·  CMP ₹2197.60
+    Args:
+        row: pandas Series from the weekly scan CSV (has pattern, score,
+             cmp, breakout, stop_loss, target_1, target_2, sector, etc.)
+        vol_info: optional dict from daily scan with 'pct_chg' and 'vol_ratio'
+                  to show today's volume action alongside the pattern setup.
     """
+    sym    = str(row["symbol"]).replace(".NS", "")
+    pat    = str(row["pattern"])
+    score  = row["score"]
+    rr     = row["rr"]
+    cmp    = row["cmp"]
+    entry  = row["breakout"]
+    stop   = row["stop_loss"]
+    t1     = row.get("target_1", row.get("target", 0))
+    t2     = row.get("target_2", t1)
+    status = str(row.get("status", ""))
+    sector = str(row.get("sector", ""))
+    signal = str(row.get("sector_signal", ""))
+    tf     = str(row.get("timeframe", "Daily"))
+
+    pct_done   = row.get("pct_done", 0)
+    pct_left   = row.get("pct_left", 100)
+    upside_rem = row.get("upside_remaining", row.get("upside_%", 0))
+    sustained      = str(row.get("sustained", "False")).lower() == "true"
+    nested         = str(row.get("nested_cup", "False")).lower() == "true"
+    double_confirm = str(row.get("double_confirm", "False")).lower() == "true"
+    hist_resist    = row.get("hist_resist", "")
+
+    sec_icon = {"BOOM": "🔥", "RISING": "↑", "COOLING": "↓", "WEAK": "🔴"}.get(signal, "")
+
+    flag_parts = []
+    if sustained:      flag_parts.append("[S]")
+    if nested:         flag_parts.append("[N]")
+    if double_confirm: flag_parts.append("[D]")
+    flags = " ".join(flag_parts)
+
+    resist_note = ""
+    if hist_resist and str(hist_resist) not in ("", "nan", "0", "0.0"):
+        try:
+            resist_note = f"  ~prior resistance ₹{float(hist_resist):.0f}"
+        except Exception:
+            pass
+
+    if status == "BREAKOUT":
+        action = f"BUY NOW at ₹{cmp}"
+    else:
+        action = f"BUY above ₹{entry}"
+
+    risk_pct = round((entry - stop) / entry * 100, 1) if entry > 0 else 0
+
+    # Today's volume info (from daily scan) — shown as a bonus line
+    vol_line = ""
+    if vol_info:
+        pct = vol_info.get("pct_chg", 0)
+        vr  = vol_info.get("vol_ratio", 0)
+        pct_str = ('+' if pct >= 0 else '') + str(pct) + '%'
+        vol_line = f"   📊 Today: {pct_str}  ·  {vr}x vol"
+
+    msg_lines = [
+        "━━━━━━━━━━━━━━━━━━━",
+        f"<b>{sym}</b>  Score {score}  {pat} [{tf}]  {flags}",
+    ]
+    if sector and sector not in ("", "Unknown", "nan"):
+        msg_lines.append(f"   🏭 {sector} {sec_icon} {signal}")
+    msg_lines.append(f"   💰 CMP ₹{cmp}  →  {action}")
+    t2_str = f" → ₹{t2}" if t2 and t2 != t1 else ""
+    msg_lines.append(f"   🛑 SL ₹{stop} ({risk_pct}% risk)  |  🎯 Target ₹{t1}{t2_str}")
+    try:
+        done_val = float(pct_done)
+        left_val = float(pct_left)
+        rem_val  = float(upside_rem)
+        msg_lines.append(f"   📊 Move: {done_val:.0f}% done, {left_val:.0f}% left  |  +{rem_val:.1f}% to T2")
+    except Exception:
+        pass
+    msg_lines.append(f"   📈 R:R 1:{rr}")
+    if vol_line:
+        msg_lines.append(vol_line)
+    if resist_note:
+        msg_lines.append(f"   ⚠️{resist_note}")
+
+    return "\n".join(msg_lines)
+
+
+def _fmt_pick(r, show_plan=True, pattern=None):
+    """Format a daily-scan-only pick (not in weekly scan) — simpler format."""
     sym = _normalize_symbol(r["symbol"])
     pct = r["pct_chg"]
     pct_str = ('+' if pct >= 0 else '') + str(pct) + '%'
     vol_str = str(r['vol_ratio']) + 'x vol'
+    pat_str = f"  ·  <i>{pattern}</i>" if pattern else ""
 
     if show_plan and "entry" in r and "stop" in r and "target" in r:
         rr = r.get("rr", 0)
         risk = r.get("risk_pct", 0)
-        line1 = f"  {sym}   {pct_str}  ·  {vol_str}"
-        line2 = (f"  → Entry ₹{r['entry']}  |  SL ₹{r['stop']}  |  "
-                 f"Tgt ₹{r['target']}  |  R:R {rr}  |  Risk {risk}%")
-        return line1 + "\n" + line2
+        line1 = f"  ● <b>{sym}</b>  {pct_str}  ·  {vol_str}{pat_str}"
+        line2 = (f"     → Entry <b>₹{r['entry']}</b>  |  SL <b>₹{r['stop']}</b>  |  "
+                 f"Tgt <b>₹{r['target']}</b>")
+        line3 = f"     → R:R <b>{rr}</b>  |  Risk <b>{risk}%</b>"
+        return line1 + "\n" + line2 + "\n" + line3
     else:
-        return f"  {sym}   {pct_str}  ·  {vol_str}  ·  CMP ₹{r['close']}"
+        return f"  ● <b>{sym}</b>  {pct_str}  ·  {vol_str}{pat_str}  ·  CMP <b>₹{r['close']}</b>"
 
 
 def _build_telegram_summary(args, hot_sectors, sector_perf, surges,
@@ -542,22 +639,36 @@ def _build_telegram_summary(args, hot_sectors, sector_perf, surges,
                             sector_results, sector_syms):
     """Build a clean, actionable Telegram summary (SwingIQ format).
 
-    Format:
-    - 2-line per pick for BREAKOUT/Backbone (stock info + trade plan)
-    - 1-line per pick for WATCH/BREAKDOWN/MISSED (stock info + CMP)
-    - Blank line between BREAKOUT picks for readability
-    - No NEXT action line, no footer disclaimer
-    - Dedup by normalized symbol (no more ICICIGI + ICICIGI.NS)
-    - Categorize stocks: BREAKOUT / BREAKDOWN / WATCH / MISSED
-    - Flag already-moved stocks (>10%) as missed, not opportunities
+    Structure:
+    1. Header + mode + sector heat
+    2. Top weekly scan picks in rich format (Score, Pattern, Sector, CMP,
+       SL, Target T1→T2, Move progress, R:R, flags) — these are the pattern
+       setups being tracked for entry triggers. Today's volume info is
+       appended if the stock appeared in today's daily scan.
+    3. Today's volume movers (not in weekly scan) — simpler format
+    4. Footer with flags legend
     """
     lines = []
 
+    # Load full weekly scan DataFrame for rich formatting
+    weekly_df, weekly_path = _load_weekly_scan_df()
+    weekly_lookup = {}  # normalized_sym → DataFrame row
+    if weekly_df is not None:
+        for _, row in weekly_df.iterrows():
+            sym = _normalize_symbol(str(row["symbol"]))
+            weekly_lookup[sym] = row
+
+    # Build daily scan lookup: normalized symbol → vol_info dict
+    daily_lookup = {}
+    for r in all_results:
+        sym = _normalize_symbol(r["symbol"])
+        daily_lookup[sym] = {"pct_chg": r["pct_chg"], "vol_ratio": r["vol_ratio"]}
+
     # ── Mode line ──
     if args.bearish:
-        lines.append("🔻 Mode: BEARISH (short candidates)")
+        lines.append("🔻 <b>Mode: BEARISH</b> (short candidates)")
     else:
-        lines.append("📈 Mode: BULLISH (long candidates)")
+        lines.append("📈 <b>Mode: BULLISH</b> (long candidates)")
 
     # ── Sector heat with actual % numbers ──
     if sector_perf:
@@ -566,9 +677,9 @@ def _build_telegram_summary(args, hot_sectors, sector_perf, surges,
         for s in hot_sectors:
             p = sec_map.get(s)
             if p is not None:
-                sec_parts.append(f"{s} {'+' if p >= 0 else ''}{p}%")
+                sec_parts.append(f"<b>{s}</b> {'+' if p >= 0 else ''}{p}%")
             else:
-                sec_parts.append(s)
+                sec_parts.append(f"<b>{s}</b>")
         label = "Weak sectors" if args.bearish else "Hot sectors"
         lines.append(f"🔥 {label}: {', '.join(sec_parts)}")
 
@@ -594,14 +705,30 @@ def _build_telegram_summary(args, hot_sectors, sector_perf, surges,
     for c in cats:
         cats[c].sort(key=lambda x: x["vol_ratio"], reverse=True)
 
+    # ════════════════════════════════════════════════════════════════════
+    # Section 1: Top weekly scan picks (rich format) — the pattern setups
+    # ════════════════════════════════════════════════════════════════════
+    if not args.bearish and weekly_df is not None and len(weekly_df) > 0:
+        top_weekly = weekly_df.head(10)
+        lines.append(f"\n📋 <b>PATTERN SETUPS</b> — top {len(top_weekly)} from weekly scan\n")
+        for _, row in top_weekly.iterrows():
+            sym = _normalize_symbol(str(row["symbol"]))
+            vol_info = daily_lookup.get(sym)
+            lines.append(_fmt_pick_rich(row, vol_info=vol_info))
+
+    # ════════════════════════════════════════════════════════════════════
+    # Section 2: Today's volume movers (not in weekly scan)
+    # ════════════════════════════════════════════════════════════════════
+    # Filter out stocks already shown in the weekly scan section
+    volume_only = [r for r in deduped
+                   if _normalize_symbol(r["symbol"]) not in weekly_lookup
+                   and r["vol_ratio"] >= SURGE_THRESHOLD]
+
     if args.bearish:
-        # Bearish mode: mirror console logic — stocks in weak sectors, worst first
-        # SHORT signal: pct < -2 AND vol > 1.5x; else WATCH
         weak_sector_stocks = set(_get_stocks_in_sectors(hot_sectors))
         bearish_picks = [r for r in all_results
                          if _normalize_symbol(r["symbol"]) in weak_sector_stocks
                          or r["symbol"] in weak_sector_stocks]
-        # Dedup by normalized symbol
         bp_seen = set()
         bp_deduped = []
         for r in bearish_picks:
@@ -610,47 +737,50 @@ def _build_telegram_summary(args, hot_sectors, sector_perf, surges,
                 bp_seen.add(k)
                 bp_deduped.append(r)
         bearish_picks = bp_deduped
-        bearish_picks.sort(key=lambda x: x["pct_chg"])  # worst first
+        bearish_picks.sort(key=lambda x: x["pct_chg"])
 
         shorts = [r for r in bearish_picks if r["pct_chg"] < -2 and r["vol_ratio"] > 1.5]
         watches = [r for r in bearish_picks if not (r["pct_chg"] < -2 and r["vol_ratio"] > 1.5)]
 
         if shorts:
-            lines.append(f"\n🔻 SHORT — strong selling + volume ({len(shorts)})\n")
+            lines.append(f"\n🔻 <b>SHORT</b> — strong selling + volume ({len(shorts)})\n")
             for r in shorts[:5]:
                 lines.append(_fmt_pick(r))
                 lines.append("")
         if watches:
-            lines.append(f"👀 WATCH — weak but no volume confirm ({len(watches)})\n")
+            lines.append(f"👀 <b>WATCH</b> — weak but no volume confirm ({len(watches)})\n")
             for r in watches[:5]:
                 lines.append(_fmt_pick(r, show_plan=False))
         if not shorts and not watches:
             lines.append("\nNo bearish candidates in weak sectors today.")
     else:
-        # Bullish mode: show actionable categories with trade plans
-        if cats["BREAKOUT"]:
-            lines.append(f"\n🟢 BREAKOUT — investigate for entry ({len(cats['BREAKOUT'])})\n")
-            for r in cats["BREAKOUT"][:5]:
+        # Bullish volume movers not in weekly scan
+        vol_breakout = [r for r in cats["BREAKOUT"]
+                        if _normalize_symbol(r["symbol"]) not in weekly_lookup]
+        vol_watch = [r for r in cats["WATCH"]
+                     if _normalize_symbol(r["symbol"]) not in weekly_lookup]
+        vol_breakdown = [r for r in cats["BREAKDOWN"]
+                         if _normalize_symbol(r["symbol"]) not in weekly_lookup]
+
+        if vol_breakout:
+            lines.append(f"\n🟢 <b>VOLUME BREAKOUT</b> — today's surge ({len(vol_breakout)})\n")
+            for r in vol_breakout[:5]:
                 lines.append(_fmt_pick(r))
-                lines.append("")  # blank line between picks for readability
-        if cats["WATCH"]:
-            lines.append(f"👀 WATCH — volume spike, no direction ({len(cats['WATCH'])})\n")
-            for r in cats["WATCH"][:3]:
+                lines.append("")
+        if vol_watch:
+            lines.append(f"👀 <b>VOLUME WATCH</b> — spike, no direction ({len(vol_watch)})\n")
+            for r in vol_watch[:3]:
                 lines.append(_fmt_pick(r))
-        if cats["BREAKDOWN"]:
-            lines.append(f"\n🔴 BREAKDOWN — avoid these ({len(cats['BREAKDOWN'])})\n")
-            for r in cats["BREAKDOWN"][:3]:
-                lines.append(_fmt_pick(r, show_plan=False))
-        if cats["MISSED_UP"]:
-            lines.append(f"\n⏭️ MISSED — already moved >10% ({len(cats['MISSED_UP'])})\n")
-            for r in cats["MISSED_UP"][:3]:
+        if vol_breakdown:
+            lines.append(f"\n🔴 <b>BREAKDOWN</b> — avoid these ({len(vol_breakdown)})\n")
+            for r in vol_breakdown[:3]:
                 lines.append(_fmt_pick(r, show_plan=False))
 
-        # Backbone movers (curated watchlist)
+        # Backbone movers (curated watchlist) — only those NOT in weekly scan
         bb_movers = [r for r in backbone_results
-                     if r["pct_chg"] >= 2 or r["vol_ratio"] >= SURGE_THRESHOLD]
+                     if (r["pct_chg"] >= 2 or r["vol_ratio"] >= SURGE_THRESHOLD)
+                     and _normalize_symbol(r["symbol"]) not in weekly_lookup]
         bb_movers.sort(key=lambda x: x["vol_ratio"], reverse=True)
-        # Dedup backbone by normalized symbol
         bb_seen = set()
         bb_deduped = []
         for r in bb_movers:
@@ -659,10 +789,15 @@ def _build_telegram_summary(args, hot_sectors, sector_perf, surges,
                 bb_seen.add(k)
                 bb_deduped.append(r)
         if bb_deduped:
-            lines.append(f"\n💼 Backbone movers ({len(bb_deduped)})\n")
+            lines.append(f"\n💼 <b>Backbone movers</b> ({len(bb_deduped)})\n")
             for r in bb_deduped[:5]:
                 lines.append(_fmt_pick(r))
-                lines.append("")  # blank line between picks for readability
+                lines.append("")
+
+    # Footer with flags legend
+    lines.append("━━━━━━━━━━━━━━━━━━━")
+    lines.append("<b>FLAGS:</b> [S]=Sustained  [N]=Nested cup  [D]=Double confirm")
+    lines.append("⚠️ For research only. Not financial advice.")
 
     return lines
 
