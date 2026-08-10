@@ -252,7 +252,7 @@ def send_daily_summary(summary_text, header=None):
         return False
 
     if header:
-        msg = f"<b>{header}</b>\n\n{summary_text}"
+        msg = f"<b>{header}</b>\n━━━━━━━━━━━━━━━━━━━━━\n{summary_text}"
     else:
         msg = summary_text
 

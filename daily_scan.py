@@ -512,9 +512,14 @@ def _categorize_pick(r):
 
 
 def _fmt_pick(r, show_plan=True):
-    """Format a stock pick for Telegram. Includes trade plan if available.
+    """Format a stock pick for Telegram (SwingIQ format).
 
-    Example: CAMPUS | +4.11% | 177.8x vol | Entry 236 SL 225 Target 257 R:R 2.0
+    With trade plan (2 lines):
+      TATAINVEST   +3.98%  ·  16.3x vol
+      → Entry ₹693.65  |  SL ₹669.10  |  Tgt ₹742.75  |  R:R 2.0  |  Risk 3.5%
+
+    Without trade plan (1 line):
+      RATNAMANI   -7.30%  ·  12.6x vol  ·  CMP ₹2197.60
     """
     sym = _normalize_symbol(r["symbol"])
     pct = r["pct_chg"]
@@ -524,24 +529,27 @@ def _fmt_pick(r, show_plan=True):
     if show_plan and "entry" in r and "stop" in r and "target" in r:
         rr = r.get("rr", 0)
         risk = r.get("risk_pct", 0)
-        return (f"  {sym} | {pct_str} | {vol_str} | "
-                f"Entry {r['entry']} SL {r['stop']} Target {r['target']} "
-                f"R:R {rr} (risk {risk}%)")
+        line1 = f"  {sym}   {pct_str}  ·  {vol_str}"
+        line2 = (f"  → Entry ₹{r['entry']}  |  SL ₹{r['stop']}  |  "
+                 f"Tgt ₹{r['target']}  |  R:R {rr}  |  Risk {risk}%")
+        return line1 + "\n" + line2
     else:
-        return f"  {sym} | {pct_str} | {vol_str} | CMP {r['close']}"
+        return f"  {sym}   {pct_str}  ·  {vol_str}  ·  CMP ₹{r['close']}"
 
 
 def _build_telegram_summary(args, hot_sectors, sector_perf, surges,
                             backbone_results, all_results,
                             sector_results, sector_syms):
-    """Build a clean, actionable Telegram summary.
+    """Build a clean, actionable Telegram summary (SwingIQ format).
 
-    Fixes vs old output:
+    Format:
+    - 2-line per pick for BREAKOUT/Backbone (stock info + trade plan)
+    - 1-line per pick for WATCH/BREAKDOWN/MISSED (stock info + CMP)
+    - Blank line between BREAKOUT picks for readability
+    - No NEXT action line, no footer disclaimer
     - Dedup by normalized symbol (no more ICICIGI + ICICIGI.NS)
-    - Show sector % numbers (how hot is hot?)
     - Categorize stocks: BREAKOUT / BREAKDOWN / WATCH / MISSED
     - Flag already-moved stocks (>10%) as missed, not opportunities
-    - Add NEXT ACTION line so you know what to do
     """
     lines = []
 
@@ -608,11 +616,12 @@ def _build_telegram_summary(args, hot_sectors, sector_perf, surges,
         watches = [r for r in bearish_picks if not (r["pct_chg"] < -2 and r["vol_ratio"] > 1.5)]
 
         if shorts:
-            lines.append(f"\n🔻 SHORT — strong selling + volume ({len(shorts)}):")
+            lines.append(f"\n🔻 SHORT — strong selling + volume ({len(shorts)})\n")
             for r in shorts[:5]:
                 lines.append(_fmt_pick(r))
+                lines.append("")
         if watches:
-            lines.append(f"\n👀 WATCH — weak but no volume confirm ({len(watches)}):")
+            lines.append(f"👀 WATCH — weak but no volume confirm ({len(watches)})\n")
             for r in watches[:5]:
                 lines.append(_fmt_pick(r, show_plan=False))
         if not shorts and not watches:
@@ -620,19 +629,20 @@ def _build_telegram_summary(args, hot_sectors, sector_perf, surges,
     else:
         # Bullish mode: show actionable categories with trade plans
         if cats["BREAKOUT"]:
-            lines.append(f"\n🟢 BREAKOUT — investigate for entry ({len(cats['BREAKOUT'])}):")
+            lines.append(f"\n🟢 BREAKOUT — investigate for entry ({len(cats['BREAKOUT'])})\n")
             for r in cats["BREAKOUT"][:5]:
                 lines.append(_fmt_pick(r))
+                lines.append("")  # blank line between picks for readability
         if cats["WATCH"]:
-            lines.append(f"\n👀 WATCH — volume spike, no direction ({len(cats['WATCH'])}):")
+            lines.append(f"👀 WATCH — volume spike, no direction ({len(cats['WATCH'])})\n")
             for r in cats["WATCH"][:3]:
                 lines.append(_fmt_pick(r))
         if cats["BREAKDOWN"]:
-            lines.append(f"\n🔴 BREAKDOWN — avoid these ({len(cats['BREAKDOWN'])}):")
+            lines.append(f"\n🔴 BREAKDOWN — avoid these ({len(cats['BREAKDOWN'])})\n")
             for r in cats["BREAKDOWN"][:3]:
                 lines.append(_fmt_pick(r, show_plan=False))
         if cats["MISSED_UP"]:
-            lines.append(f"\n⏭️ MISSED — already moved >10% ({len(cats['MISSED_UP'])}):")
+            lines.append(f"\n⏭️ MISSED — already moved >10% ({len(cats['MISSED_UP'])})\n")
             for r in cats["MISSED_UP"][:3]:
                 lines.append(_fmt_pick(r, show_plan=False))
 
@@ -649,22 +659,11 @@ def _build_telegram_summary(args, hot_sectors, sector_perf, surges,
                 bb_seen.add(k)
                 bb_deduped.append(r)
         if bb_deduped:
-            lines.append(f"\n💼 Backbone movers ({len(bb_deduped)}):")
+            lines.append(f"\n💼 Backbone movers ({len(bb_deduped)})\n")
             for r in bb_deduped[:5]:
                 lines.append(_fmt_pick(r))
+                lines.append("")  # blank line between picks for readability
 
-    # ── Next action ──
-    lines.append("")
-    if args.bearish:
-        lines.append("NEXT: Chart-verify BREAKDOWN picks. Short only on weak sectors with volume confirmation.")
-    elif cats["BREAKOUT"]:
-        lines.append("NEXT: Chart-verify BREAKOUT picks. Run `python scanner.py --test` for full setup analysis.")
-    elif cats["WATCH"]:
-        lines.append("NEXT: WATCH picks have volume but no direction. Wait for breakout confirmation before entering.")
-    else:
-        lines.append("NEXT: No strong setups today. Wait for next scan.")
-
-    lines.append("\n⚠️ Volume alerts = investigate, not buy signals. Always chart-verify.")
     return lines
 
 
@@ -824,7 +823,7 @@ def main():
 
     # Auto-send daily summary to Telegram (unless --no-notify)
     if not args.no_notify:
-        header = f"📊 [V3] DAILY SCAN — {date.today().strftime('%d %b %Y')}"
+        header = f"📊 SwingIQ Daily Scan — {date.today().strftime('%d %b %Y')}"
         lines = _build_telegram_summary(
             args, hot_sectors, sector_perf, surges, backbone_results,
             all_results, sector_results, sector_syms
