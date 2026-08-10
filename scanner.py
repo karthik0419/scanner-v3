@@ -25,13 +25,17 @@ Usage:
   python scanner.py --test                   # quick test on 50 stocks
 """
 
-import os, sys, time, argparse, warnings
+import os, sys, time, argparse, warnings, logging
 import pandas as pd
 import numpy as np
 from datetime import date
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 warnings.filterwarnings("ignore")
+# Suppress yfinance "possibly delisted" error spam — these are handled
+# gracefully by the fallback chain (yfinance → jugaad-data → bhavcopy)
+for _n in ["yfinance", "urllib3", "peewee", "asyncio"]:
+    logging.getLogger(_n).setLevel(logging.CRITICAL)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from data.nse_eq import fetch_nse_eq_universe
@@ -367,12 +371,19 @@ def main():
                         help="Filter by timeframe: all (default), daily, weekly, monthly")
     args = parser.parse_args()
 
+    # --test is a smoke test: suppress real-world side effects so test runs
+    # don't pollute the live paper tracker or send Telegram alerts.
+    if args.test:
+        args.no_notify = True
+        args.no_sync = True
+
     print("=" * 70)
     print("  SWING SCANNER  v3  — PRODUCTION")
     print(f"  Full NSE EQ Universe | {date.today()}")
     print(f"  SL mode: {args.sl_mode} | Price filter: "
           f"{args.min_price or 0}-{args.max_price or 'inf'} | "
-          f"Direction: {'BEARISH' if args.bearish else 'BULLISH'}")
+          f"Direction: {'BEARISH' if args.bearish else 'BULLISH'}"
+          + ("  [TEST — notify/sync OFF]" if args.test else ""))
     print("=" * 70)
 
     # Market regime check (Nifty vs 200DMA)

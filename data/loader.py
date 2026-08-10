@@ -58,6 +58,57 @@ def _nse_symbol(symbol):
     return symbol.replace(".NS", "").replace(".BO", "").upper()
 
 
+# ── Symbol alias map ──────────────────────────────────────────────────
+# Some stocks have been renamed on NSE/Yahoo Finance but the universe
+# files (nifty500.txt, backbone50.txt, etc.) still use the old names.
+# This map translates old symbols → current NSE symbols so yfinance
+# and the bhavcopy lookup can find them.
+SYMBOL_ALIASES = {
+    "ZOMATO":      "ETERNAL",       # Zomato → Eternal Ltd (rebranded 2025)
+    "REC":         "RECLTD",        # REC Ltd
+    "BATA":        "BATAINDIA",     # Bata India
+    "PRAJ":        "PRAJIND",       # Praj Industries
+    "MCDOWELL-N":  "UNITDSPR",      # United Spirits (old MCDOWELL-N)
+    "NIIT":        "NIITLTD",       # NIIT Ltd
+    "WELSPUNIND":  "WELSPUNLIV",    # Welspun India → Welspun Living
+    "KENNAMETAL":  "KENNAMET",      # Kennametal India
+    "ZENSAR":      "ZENSARTECH",    # Zensar Technologies
+    "DCX":         "DCXINDIA",      # DCX Systems
+    "MAZAGON":     "MAZADOCK",      # Mazagon Dock Shipbuilders
+    "NARAYANA":    "NH",            # Narayana Hrudayalaya
+    "MTAR":        "MTARTECH",      # MTAR Technologies
+    "TATAMOTORS":  "TMPV",          # Tata Motors → TMPV (demerger, Oct 2025)
+}
+
+# Genuinely delisted/unavailable stocks — skip silently instead of
+# printing scary "possibly delisted" errors. These are stocks that
+# are NOT in the NSE bhavcopy AND NOT on Yahoo Finance.
+KNOWN_DELISTED = {
+    "HEXAWARE",     # Taken private by Carlyle (2024)
+    "AMARAJABAT",   # Renamed/delisted — not in bhavcopy or Yahoo
+    "LTIM",         # LTIMindtree — not in bhavcopy (may have merged)
+    "DRONEACHARYA", # Not in bhavcopy or Yahoo
+    "CAPRIGINS",    # Capri Global Financial Services — not in bhavcopy
+    "BARBEQUE",     # Barbeque Nation — not in bhavcopy
+    "MAHINDCIE",    # Mahindra CIE — not in bhavcopy
+    "RADHAKRISHN",  # Radhakrishna Foodland — not in bhavcopy
+    "TILAKNAGAR",   # Tilaknagar Industries — not in bhavcopy
+    "PRATAAP",      # Prataap Snacks — not in bhavcopy
+    "AMIT",         # Not in bhavcopy
+}
+
+
+def _resolve_symbol(symbol):
+    """Resolve a symbol to its current NSE name using the alias map.
+    Returns (resolved_symbol, is_delisted)."""
+    sym = _nse_symbol(symbol)
+    if sym in KNOWN_DELISTED:
+        return sym, True
+    if sym in SYMBOL_ALIASES:
+        return SYMBOL_ALIASES[sym], False
+    return sym, False
+
+
 def _load_bhavcopy():
     """Load today's bhavcopy EOD data for all stocks (1 download = ~2400 stocks)."""
     global _bhavcopy_cache, _bhavcopy_date
@@ -78,7 +129,7 @@ def _load_bhavcopy():
 
 def _get_eod_from_bhavcopy(symbol):
     """Get today's EOD bar for a single stock from bhavcopy."""
-    sym = _nse_symbol(symbol)
+    sym, _delisted = _resolve_symbol(symbol)
     df = _load_bhavcopy()
     if df is None:
         return None
@@ -99,15 +150,21 @@ def _get_eod_from_bhavcopy(symbol):
 
 def _fetch_nse(symbol, days=180):
     """Fetch daily OHLCV. Uses yfinance (cached) + bhavcopy for today's bar.
-    Falls back to jugaad-data if yfinance fails."""
+    Falls back to jugaad-data if yfinance fails.
+    Automatically resolves stale symbols via SYMBOL_ALIASES and silently
+    skips stocks in KNOWN_DELISTED."""
+    # Skip known delisted stocks silently
+    sym, is_delisted = _resolve_symbol(symbol)
+    if is_delisted:
+        return None
+
     cached = _cache_load(symbol, days)
     if cached is not None:
         return cached
 
-    sym = _nse_symbol(symbol)
     result = None
 
-    # Try yfinance via price_service (better caching)
+    # Try yfinance via price_service (better caching) — use resolved symbol
     try:
         ps = _get_ps()
         period_map = {30: "1mo", 90: "3mo", 180: "6mo", 365: "1y", 730: "2y"}
@@ -119,7 +176,7 @@ def _fetch_nse(symbol, days=180):
     except Exception:
         pass
 
-    # Fallback: jugaad-data
+    # Fallback: jugaad-data — use resolved symbol
     if result is None or result.empty:
         to_dt = date.today()
         from_dt = to_dt - timedelta(days=days)
@@ -137,11 +194,11 @@ def _fetch_nse(symbol, days=180):
         except Exception:
             pass
 
-    # Fallback: raw yfinance
+    # Fallback: raw yfinance — use resolved symbol
     if (result is None or result.empty):
         try:
             import yfinance as yf
-            yf_sym = symbol if symbol.endswith(".NS") else sym + ".NS"
+            yf_sym = sym + ".NS"
             period_map2 = {180: "6mo", 400: "2y", 730: "3y"}
             period2 = period_map2.get(days) or ("2y" if days <= 400 else "5y")
             df = yf.download(yf_sym, period=period2, interval="1d", progress=False, auto_adjust=True)

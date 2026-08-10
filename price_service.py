@@ -378,8 +378,19 @@ class PriceService:
     # ── Historical OHLC (yfinance) ──────────────────────────────────
 
     def get_ohlc(self, symbol: str, period: str = "1y", interval: str = "1d") -> Optional[pd.DataFrame]:
-        """Fetch historical OHLC via yfinance. Cached 8 hours."""
+        """Fetch historical OHLC via yfinance. Cached 8 hours.
+        Resolves stale symbols via SYMBOL_ALIASES from data.loader."""
         symbol_clean = symbol.replace(".NS", "").replace(".BO", "")
+
+        # Resolve stale symbols (e.g. ZOMATO → ETERNAL, REC → RECLTD)
+        try:
+            from data.loader import SYMBOL_ALIASES, KNOWN_DELISTED
+            if symbol_clean in KNOWN_DELISTED:
+                return None
+            symbol_clean = SYMBOL_ALIASES.get(symbol_clean, symbol_clean)
+        except ImportError:
+            pass
+
         cache_key = f"ohlc:{symbol_clean}:{period}:{interval}"
         cached = self.cache.get(cache_key, CACHE_TTL_OHLC)
         if cached:
