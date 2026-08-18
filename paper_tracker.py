@@ -22,6 +22,7 @@ Each row = one pick, columns:
 import os
 import sys
 import argparse
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 import pandas as pd
 from datetime import date, datetime
 
@@ -365,8 +366,11 @@ def update_tracker(manual_prices=None):
         if exit_price is not None:
             tracker.at[idx, "exit_price"] = round(exit_price, 2)
         if exit_date is not None:
+            # cast column to object first to avoid float64 dtype conflict
+            tracker["exit_date"] = tracker["exit_date"].astype(object)
             tracker.at[idx, "exit_date"] = exit_date
         if exit_reason is not None:
+            tracker["exit_reason"] = tracker["exit_reason"].astype(object)
             tracker.at[idx, "exit_reason"] = exit_reason
 
         updated += 1

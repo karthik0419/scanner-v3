@@ -1,12 +1,38 @@
 """Rank today's picks by 2-week profit potential using backtest statistics."""
 import csv
+import sys
+import os
+import glob
+from datetime import date
+
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 import pandas as pd
 
-# Load today's picks
-picks = list(csv.DictReader(open("F:/projects/claude/scanner-v3/results/v3_2026-07-29.csv")))
+# ── Load latest scan picks dynamically ──
+results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+scan_files = [f for f in glob.glob(os.path.join(results_dir, "v3_*.csv")) if "_all" not in f]
+if not scan_files:
+    print("No scan CSV found in results/. Run scanner.py first.")
+    sys.exit(1)
+scan_files.sort(key=os.path.getmtime)
+latest_scan = scan_files[-1]
+picks = list(csv.DictReader(open(latest_scan)))
+scan_date = os.path.basename(latest_scan).replace("v3_", "").replace(".csv", "")
 
-# Load backtest results for pattern statistics
-v3 = pd.read_csv("F:/projects/claude/scanner-v3/results/backtest_v3.csv")
+# ── Load latest backtest results dynamically ──
+bt_files = glob.glob(os.path.join(results_dir, "backtest_v3*.csv"))
+if not bt_files:
+    # Fallback: use any backtest CSV
+    bt_files = glob.glob(os.path.join(results_dir, "backtest*.csv"))
+if not bt_files:
+    print("No backtest CSV found in results/. Run compare_backtest.py or backtest.py first.")
+    sys.exit(1)
+bt_files.sort(key=os.path.getmtime)
+latest_bt = bt_files[-1]
+v3 = pd.read_csv(latest_bt)
 
 # Pattern stats from backtest
 pat_stats = v3.groupby("pattern").agg(
@@ -24,7 +50,8 @@ time_exits = v3[v3["exit_reason"] == "Time Exit"]
 time_by_pat = time_exits.groupby("pattern")["pnl_pct"].agg(["mean", "count"]).reset_index()
 
 print("=" * 90)
-print("  2-WEEK PROFIT POTENTIAL ANALYSIS — 29 Jul 2026")
+print(f"  2-WEEK PROFIT POTENTIAL ANALYSIS — {scan_date}")
+print(f"  Scan: {os.path.basename(latest_scan)}  |  Backtest: {os.path.basename(latest_bt)}")
 print("=" * 90)
 
 # Score each pick
@@ -40,31 +67,19 @@ for p in picks:
     risk = (cmp - sl) / cmp * 100
     upside = (t1 - cmp) / cmp * 100
     dist_to_bo = (bo - cmp) / cmp * 100 if status != "BREAKOUT" else 0
-    
+
     # Get pattern backtest stats
     ps = pat_stats[pat_stats["pattern"] == pat]
     if ps.empty:
         ps = pat_stats[pat_stats["pattern"] == "Cup & Handle"]  # fallback
-    
+
     wr = float(ps["win_rate"].iloc[0])
     avg_win = float(ps["avg_win"].iloc[0])
     avg_loss = float(ps["avg_loss"].iloc[0])
     avg_days = float(ps["avg_days"].iloc[0])
     t1_rate = float(ps["t1_rate"].iloc[0])
     trades = int(ps["trades"].iloc[0])
-    
-    # 2-week probability: trades that hit T1/T2 within ~14 days
-    # From backtest: avg days held is ~16, so 2 weeks is tight
-    # Only BREAKOUT status can act now; NEAR needs to break out first
-    
-    # Probability factors:
-    # 1. BREAKOUT status = can trade NOW (NEAR = must wait for breakout)
-    # 2. Distance to breakout = closer = more likely to trigger soon
-    # 3. Pattern win rate from backtest
-    # 4. T1 hit rate from backtest
-    # 5. Tight risk = smaller loss if wrong
-    # 6. Avg days held = shorter = faster result
-    
+
     # Actionability score (0-100)
     if status == "BREAKOUT":
         action_score = 100
@@ -74,10 +89,10 @@ for p in picks:
         action_score = 60
     else:
         action_score = 30
-    
+
     # Pattern reliability score (0-100)
     pattern_score = wr  # win rate directly
-    
+
     # Risk score (0-100) — lower risk = higher score
     if risk <= 3:
         risk_score = 100
@@ -87,7 +102,7 @@ for p in picks:
         risk_score = 60
     else:
         risk_score = 30
-    
+
     # Speed score — patterns that resolve faster are better for 2-week window
     if avg_days <= 14:
         speed_score = 100
@@ -97,14 +112,14 @@ for p in picks:
         speed_score = 40
     else:
         speed_score = 20
-    
+
     # T1 probability — how often does this pattern hit T1?
     t1_prob = t1_rate
-    
+
     # Composite 2-week score
-    composite = (action_score * 0.30 + pattern_score * 0.25 + risk_score * 0.15 
+    composite = (action_score * 0.30 + pattern_score * 0.25 + risk_score * 0.15
                  + speed_score * 0.15 + t1_prob * 0.15)
-    
+
     ranked.append({
         "symbol": p["symbol"],
         "pattern": pat,
@@ -148,7 +163,7 @@ for i, r in enumerate(ranked[:3]):
     print(f"    Stop: {r['sl']:.2f}  |  Risk: {r['risk']:.1f}%  |  T1: {r['t1']:.2f}  |  Upside: +{r['upside']:.1f}%")
     print(f"    Backtest: {r['trades']} trades | WR: {r['wr']:.1f}% | Avg win: +{r['avg_win']:.1f}% | Avg loss: {r['avg_loss']:.1f}% | T1 hit rate: {r['t1_rate']:.1f}%")
     print(f"    Avg days held: {r['avg_days']:.0f}  |  R:R: {r['rr']:.1f}x")
-    
+
     # 2-week verdict
     if r['status'] == 'BREAKOUT':
         verdict = f"ALREADY BROKEN OUT — tradeable NOW"
@@ -158,9 +173,9 @@ for i, r in enumerate(ranked[:3]):
         verdict = f"{abs(r['dist_to_bo']):.1f}% FROM BREAKOUT — may trigger in 2-3 weeks, set alert"
     else:
         verdict = f"{abs(r['dist_to_bo']):.1f}% FROM BREAKOUT — too far for 2-week window"
-    
+
     print(f"    VERDICT: {verdict}")
-    
+
     # Probability estimate
     if r['status'] == 'BREAKOUT' and r['avg_days'] <= 20:
         prob = "HIGH — pattern resolves in ~2 weeks, already triggered"
@@ -172,22 +187,31 @@ for i, r in enumerate(ranked[:3]):
         prob = "LOW — unlikely to complete within 2 weeks"
     print(f"    2-WEEK PROBABILITY: {prob}")
 
-# Summary
+# ── Dynamic summary (generated from actual ranked data) ──
 print(f"\n{'='*90}")
 print(f"  SUMMARY — BEST BETS FOR NEXT 2 WEEKS")
 print(f"{'='*90}")
-print(f"\n  1. VEDL — BREAKOUT now, 3.4% risk, 9.46x R:R, wedge patterns avg 16 days")
-print(f"     Already broken out. SL 244.55. T1 334.92 (+32%). Best actionable trade.")
-print(f"     Wedge win rate: 35.6% but avg win +11.5% vs avg loss -3.8% = positive expectancy")
-print(f"\n  2. PNB — 3.5% from breakout, 0.7% risk (super tight), Double Bottom")
-print(f"     Double Bottom: 40.9% WR, avg +2.06%/trade, 399 trades in backtest")
-print(f"     If breaks 115.60, SL at 110.88 (only 0.7% risk). T1 124.15 (+11%)")
-print(f"     Set alert at 115.60. Highest pattern reliability + tightest risk.")
-print(f"\n  3. BPCL/MANAPPURAM/FEDERALBNK — all <1% from breakout, C&H Weekly/Monthly")
-print(f"     C&H: 34.3% WR but avg win +7.6% vs avg loss -3.0%")
-print(f"     Banking sector is WEAK — caution. But MANAPPURAM already above breakout.")
-print(f"\n  AVOID FOR 2-WEEK WINDOW:")
-print(f"     - GAIL: 7.4% risk (highest), 31% upside but takes ~30+ days")
-print(f"     - RBLBANK: 4.9% from breakout, monthly pattern (slow)")
-print(f"     - ZOMATO: 4.9% from breakout, monthly (slow)")
-print(f"\n  MARKET WARNING: Nifty below 200DMA (RISK_OFF). Reduce position size 50%.")
+
+# Top actionable picks (BREAKOUT or close to breakout)
+actionable = [r for r in ranked if r['status'] == 'BREAKOUT' or abs(r['dist_to_bo']) < 3]
+avoid = [r for r in ranked if abs(r['dist_to_bo']) > 5 or r['risk'] > 7]
+
+if actionable:
+    print()
+    for i, r in enumerate(actionable[:3]):
+        action = "BREAKOUT now" if r['status'] == 'BREAKOUT' else f"{abs(r['dist_to_bo']):.1f}% from breakout"
+        print(f"  {i+1}. {r['symbol']} — {action}, {r['risk']:.1f}% risk, {r['rr']:.1f}x R:R, {r['pattern']} avg {r['avg_days']:.0f} days")
+        if r['status'] == 'BREAKOUT':
+            print(f"     Already broken out. SL {r['sl']:.2f}. T1 {r['t1']:.2f} (+{r['upside']:.1f}%). Best actionable trade.")
+        else:
+            print(f"     If breaks {r['breakout']:.2f}, SL at {r['sl']:.2f} ({r['risk']:.1f}% risk). T1 {r['t1']:.2f} (+{r['upside']:.1f}%)")
+        print(f"     {r['pattern']}: {r['wr']:.1f}% WR, avg win +{r['avg_win']:.1f}% vs avg loss {r['avg_loss']:.1f}% = positive expectancy")
+
+if avoid:
+    print(f"\n  AVOID FOR 2-WEEK WINDOW:")
+    for r in avoid[:3]:
+        reason = f"{abs(r['dist_to_bo']):.1f}% from breakout" if abs(r['dist_to_bo']) > 5 else f"{r['risk']:.1f}% risk"
+        tf_note = f" ({r['timeframe']} pattern, slow)" if r['timeframe'] == 'monthly' else ""
+        print(f"     - {r['symbol']}: {reason}{tf_note}")
+
+print(f"\n  Analysis from {len(picks)} picks | Backtest: {len(v3)} trades | Date: {date.today()}")
