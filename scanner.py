@@ -362,6 +362,8 @@ def main():
                         help="Scan for bearish/short setups in weak sectors")
     parser.add_argument("--no-notify",  action="store_true",
                         help="Skip Telegram notification (default: auto-send on completion)")
+    parser.add_argument("--env-file",   type=str,   default=None,
+                        help="Which .env file to load Telegram creds from (e.g. .env.swingiq for prod bot)")
     parser.add_argument("--no-sync",    action="store_true",
                         help="Skip paper tracker sync (default: auto-sync on completion)")
     parser.add_argument("--smart",      action="store_true",
@@ -526,8 +528,6 @@ def main():
             if upside_remaining < 10:
                 continue  # most of move already done — not worth entering
 
-            below_cutoff = score < args.min_score
-
             # Sector rotation
             try:
                 sector_name, sector_signal, sector_bonus = get_sector_bonus(sym)
@@ -627,6 +627,7 @@ def main():
             }
             if "atr" in result:
                 row["atr"] = result["atr"]
+            below_cutoff = score < args.min_score
             if below_cutoff:
                 all_results.append(row)
             else:
@@ -679,7 +680,7 @@ def main():
     # Auto-send to Telegram (unless --no-notify)
     if not args.no_notify:
         print("[Telegram] Notifying...")
-        notify_scan_results(csv_path=out_path, top=10, bearish=args.bearish)
+        notify_scan_results(csv_path=out_path, top=10, bearish=args.bearish, env_file=args.env_file)
         print()
 
     # Auto-sync paper tracker with new scan picks

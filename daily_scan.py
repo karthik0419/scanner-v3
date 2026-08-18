@@ -158,6 +158,65 @@ def _load_weekly_scan_df():
         return None, None
 
 
+def _compute_freshness(current_csv_path, current_symbols, lookback_days=7):
+    """Check how many consecutive previous daily scan CSVs contained each symbol.
+
+    For each symbol in current_symbols, returns:
+      'NEW'      — not in any previous scan CSV (first time flagged)
+      'Day N'    — appeared in N consecutive previous CSVs (including today)
+
+    Args:
+        current_csv_path: path to today's CSV (excluded from lookback)
+        current_symbols: list of symbol strings (normalized, no .NS)
+        lookback_days: how many previous CSVs to check (default 7)
+
+    Returns:
+        dict: {symbol: 'NEW' or 'Day N'}
+    """
+    import glob
+    from datetime import datetime, timedelta
+
+    results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+    all_files = [f for f in glob.glob(os.path.join(results_dir, "v3_*.csv"))
+                 if "_all" not in f]
+    # Sort by mtime descending (newest first)
+    all_files.sort(key=os.path.getmtime, reverse=True)
+
+    # Exclude the current CSV, take the next `lookback_days` files
+    prev_files = []
+    for f in all_files:
+        if os.path.abspath(f) == os.path.abspath(current_csv_path):
+            continue
+        prev_files.append(f)
+        if len(prev_files) >= lookback_days:
+            break
+
+    # Load each previous CSV's symbols (normalized)
+    prev_symbol_sets = []
+    for f in prev_files:
+        try:
+            prev_df = pd.read_csv(f)
+            prev_syms = set(_normalize_symbol(str(s)) for s in prev_df["symbol"])
+            prev_symbol_sets.append(prev_syms)
+        except Exception:
+            break  # stop if a CSV can't be read
+
+    freshness = {}
+    for sym in current_symbols:
+        days = 0
+        for prev_set in prev_symbol_sets:
+            if sym in prev_set:
+                days += 1
+            else:
+                break  # stop at first gap (consecutive only)
+        if days == 0:
+            freshness[sym] = "NEW"
+        else:
+            freshness[sym] = f"Day {days + 1}"  # +1 for today
+
+    return freshness
+
+
 def _load_nifty500():
     """Load Nifty 500 stocks for broad coverage of liquid stocks."""
     fpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "nifty500.txt")
@@ -527,7 +586,7 @@ def _categorize_pick(r):
     return "FLAT"
 
 
-def _fmt_pick_rich(row, vol_info=None):
+def _fmt_pick_rich(row, vol_info=None, freshness=None):
     """Format a stock pick using the weekly scan's rich format (same as
     telegram_notify.py:format_message).
 
@@ -536,6 +595,8 @@ def _fmt_pick_rich(row, vol_info=None):
              cmp, breakout, stop_loss, target_1, target_2, sector, etc.)
         vol_info: optional dict from daily scan with 'pct_chg' and 'vol_ratio'
                   to show today's volume action alongside the pattern setup.
+        freshness: optional string like 'NEW' or 'Day 3' — shows how many
+                   consecutive days this stock has appeared in the scan.
     """
     sym    = str(row["symbol"]).replace(".NS", "")
     pat    = str(row["pattern"])
@@ -589,9 +650,17 @@ def _fmt_pick_rich(row, vol_info=None):
         pct_str = ('+' if pct >= 0 else '') + str(pct) + '%'
         vol_line = f"   📊 Today: {pct_str}  ·  {vr}x vol"
 
+    # Freshness badge: NEW (green) or Day N (shows repetition)
+    fresh_badge = ""
+    if freshness:
+        if freshness == "NEW":
+            fresh_badge = "  🆕 NEW"
+        else:
+            fresh_badge = f"  🔁 {freshness}"
+
     msg_lines = [
         "━━━━━━━━━━━━━━━━━━━",
-        f"<b>{sym}</b>  Score {score}  {pat} [{tf}]  {flags}",
+        f"<b>{sym}</b>  Score {score}  {pat} [{tf}]  {flags}{fresh_badge}",
     ]
     if sector and sector not in ("", "Unknown", "nan"):
         msg_lines.append(f"   🏭 {sector} {sec_icon} {signal}")
@@ -658,6 +727,15 @@ def _build_telegram_summary(args, hot_sectors, sector_perf, surges,
             sym = _normalize_symbol(str(row["symbol"]))
             weekly_lookup[sym] = row
 
+    # Compute freshness: how many consecutive previous scans contained each pick
+    freshness_map = {}
+    if weekly_df is not None and weekly_path:
+        try:
+            current_syms = [_normalize_symbol(str(s)) for s in weekly_df["symbol"]]
+            freshness_map = _compute_freshness(weekly_path, current_syms)
+        except Exception as e:
+            print(f"  [Freshness] Could not compute: {e}")
+
     # Build daily scan lookup: normalized symbol → vol_info dict
     daily_lookup = {}
     for r in all_results:
@@ -709,12 +787,25 @@ def _build_telegram_summary(args, hot_sectors, sector_perf, surges,
     # Section 1: Top weekly scan picks (rich format) — the pattern setups
     # ════════════════════════════════════════════════════════════════════
     if not args.bearish and weekly_df is not None and len(weekly_df) > 0:
-        top_weekly = weekly_df.head(10)
-        lines.append(f"\n📋 <b>PATTERN SETUPS</b> — top {len(top_weekly)} from weekly scan\n")
+        weekly_filtered = weekly_df
+        if args.min_price or args.max_price:
+            weekly_filtered = weekly_df[
+                (args.min_price is None or weekly_df["cmp"] >= args.min_price) &
+                (args.max_price is None or weekly_df["cmp"] <= args.max_price)
+            ]
+        top_weekly = weekly_filtered.head(10)
+        if len(top_weekly) > 0:
+            # Count NEW vs repeating for the header
+            new_count = sum(1 for _, row in top_weekly.iterrows()
+                           if freshness_map.get(_normalize_symbol(str(row["symbol"]))) == "NEW")
+            repeat_count = len(top_weekly) - new_count
+            fresh_summary = f" ({new_count} new, {repeat_count} repeating)" if freshness_map else ""
+            lines.append(f"\n📋 <b>PATTERN SETUPS</b> — top {len(top_weekly)} from scan{fresh_summary}\n")
         for _, row in top_weekly.iterrows():
             sym = _normalize_symbol(str(row["symbol"]))
             vol_info = daily_lookup.get(sym)
-            lines.append(_fmt_pick_rich(row, vol_info=vol_info))
+            fresh_label = freshness_map.get(sym)
+            lines.append(_fmt_pick_rich(row, vol_info=vol_info, freshness=fresh_label))
 
     # ════════════════════════════════════════════════════════════════════
     # Section 2: Today's volume movers (not in weekly scan)
@@ -811,6 +902,8 @@ def main():
     parser.add_argument("--max-price", type=float, default=None, help="Max stock price (e.g. 400)")
     parser.add_argument("--bearish", action="store_true", help="Find weak sectors + short candidates")
     parser.add_argument("--no-notify", action="store_true", help="Skip Telegram notification")
+    parser.add_argument("--env-file", type=str, default=None,
+                        help="Which .env file to load Telegram creds from (e.g. .env.swingiq for prod bot)")
     parser.add_argument("--full", action="store_true",
                         help="Scan full NSE EQ universe (~2000+ stocks). Slower but catches everything.")
     parser.add_argument("--workers", type=int, default=8,
@@ -932,11 +1025,11 @@ def main():
             print_results(sec_res, f"HOT SECTOR — {sec} ({len(sec_res)} stocks)", top=args.top)
 
         # Step 6: Top picks across ALL sources
-        all_results_combined = backbone_results + dynamic_results
-        # Deduplicate by symbol
+        all_results_combined = backbone_results + dynamic_results + sector_results
+        # Deduplicate by symbol (use filtered lists, not raw all_results)
         seen_syms = set()
         deduped = []
-        for r in all_results:
+        for r in all_results_combined:
             if r["symbol"] not in seen_syms:
                 seen_syms.add(r["symbol"])
                 deduped.append(r)
@@ -963,7 +1056,7 @@ def main():
             args, hot_sectors, sector_perf, surges, backbone_results,
             all_results, sector_results, sector_syms
         )
-        send_daily_summary("\n".join(lines), header=header)
+        send_daily_summary("\n".join(lines), header=header, env_file=args.env_file)
         print()
 
 

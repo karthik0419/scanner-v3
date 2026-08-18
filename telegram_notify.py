@@ -21,8 +21,9 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 
-def load_env():
-    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+def load_env(env_file=None):
+    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            env_file or ".env")
     env = {}
     try:
         with open(env_path) as f:
@@ -36,9 +37,9 @@ def load_env():
     return env
 
 
-def _get_credentials():
+def _get_credentials(env_file=None):
     """Load Telegram token + chat_id from .env or environment. Returns (token, chat_id) or (None, None)."""
-    env = load_env()
+    env = load_env(env_file)
     token   = env.get("TELEGRAM_BOT_TOKEN") or env.get("TELEGRAM_TOKEN") or \
               os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get("TELEGRAM_TOKEN")
     chat_id = env.get("TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID")
@@ -198,16 +199,17 @@ def format_message(df, top):
     return "\n".join(lines)
 
 
-def notify_scan_results(csv_path=None, top=10, bearish=False):
+def notify_scan_results(csv_path=None, top=10, bearish=False, env_file=None):
     """Send scan results to Telegram. Callable from other scripts.
 
     Args:
         csv_path: path to results CSV. If None, auto-finds latest.
         top: number of top picks to send.
         bearish: if True, looks for v3_bearish_*.csv instead of v3_*.csv
+        env_file: optional .env file to load credentials from (e.g. ".env.swingiq")
     Returns True if sent, False if failed/skipped.
     """
-    token, chat_id = _get_credentials()
+    token, chat_id = _get_credentials(env_file)
     if not token or not chat_id:
         print("  [Telegram] Missing credentials — skipping notification.")
         return False
@@ -238,15 +240,16 @@ def notify_scan_results(csv_path=None, top=10, bearish=False):
         return False
 
 
-def send_daily_summary(summary_text, header=None):
+def send_daily_summary(summary_text, header=None, env_file=None):
     """Send a daily scan summary to Telegram. Callable from daily_scan.py.
 
     Args:
         summary_text: the text content to send (HTML formatted).
         header: optional header line (e.g. "DAILY SCAN — 17 Jul 2026").
+        env_file: optional .env file to load credentials from (e.g. ".env.swingiq")
     Returns True if sent, False if failed/skipped.
     """
-    token, chat_id = _get_credentials()
+    token, chat_id = _get_credentials(env_file)
     if not token or not chat_id:
         print("  [Telegram] Missing credentials — skipping notification.")
         return False
