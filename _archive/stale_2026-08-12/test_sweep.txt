@@ -1,0 +1,38 @@
+
+================================================================================
+  ATR MULTIPLIER SWEEP — backbone50 (51 stocks, 2 years)
+================================================================================
+
+  Testing ATR multiplier = 1.0x...
+[SKIP SKFINDIA.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP CDSL.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP BSE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP COFORGE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP SIEMENS.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP SHAKTIPUMP.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP POCL.NS] 2 day(s) with >40% close jump (likely unadjusted split/bonus or bad data)     Trades: 774 | WR: 37.9% | Exp: 1.8% | Avg loss: -3.86% | PF: 1.75 | DD: -59.6%
+
+  Testing ATR multiplier = 1.5x...
+[SKIP SKFINDIA.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP CDSL.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP BSE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP COFORGE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP SIEMENS.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP SHAKTIPUMP.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP POCL.NS] 2 day(s) with >40% close jump (likely unadjusted split/bonus or bad data)     Trades: 756 | WR: 38.4% | Exp: 1.97% | Avg loss: -3.77% | PF: 1.85 | DD: -51.6%
+
+  Testing ATR multiplier = 2.0x...
+[SKIP SKFINDIA.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP CDSL.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP BSE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP COFORGE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP SIEMENS.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP SHAKTIPUMP.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP POCL.NS] 2 day(s) with >40% close jump (likely unadjusted split/bonus or bad data)     Trades: 787 | WR: 38.9% | Exp: 2.04% | Avg loss: -3.64% | PF: 1.92 | DD: -52.6%
+
+  Testing ATR multiplier = 2.5x...
+[SKIP SKFINDIA.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP CDSL.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP BSE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP COFORGE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP SIEMENS.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP SHAKTIPUMP.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP POCL.NS] 2 day(s) with >40% close jump (likely unadjusted split/bonus or bad data)     Trades: 767 | WR: 38.6% | Exp: 2.11% | Avg loss: -3.86% | PF: 1.89 | DD: -57.6%
+
+  Testing ATR multiplier = 3.0x...
+[SKIP SKFINDIA.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP CDSL.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP BSE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP COFORGE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP SIEMENS.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP SHAKTIPUMP.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP POCL.NS] 2 day(s) with >40% close jump (likely unadjusted split/bonus or bad data)     Trades: 732 | WR: 39.9% | Exp: 1.99% | Avg loss: -4.28% | PF: 1.77 | DD: -59.4%
+
+  Testing NO ATR (pure structural stops, no cap)...
+[SKIP SKFINDIA.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP CDSL.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP BSE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP COFORGE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP SIEMENS.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP SHAKTIPUMP.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) [SKIP POCL.NS] 2 day(s) with >40% close jump (likely unadjusted split/bonus or bad data)     Trades: 435 | WR: 40.9% | Exp: 1.71% | Avg loss: -4.03% | PF: 1.72 | DD: -64.4%
+
+================================================================================
+  RESULTS TABLE
+================================================================================
+  Mode          Trades     WR   AvgWin  AvgLoss     Exp     PF       DD  AvgRisk    SL    T1    T2
+  -----------------------------------------------------------------------------------------------
+  ATR 1.0x         774  37.9%  +11.10%   -3.86%  +1.80%  1.75   -59.6%    5.21%   398   120    55
+  ATR 1.5x         756  38.4%  +11.20%   -3.77%  +1.97%  1.85   -51.6%    4.99%   388   125    51
+  ATR 2.0x         787  38.9%  +10.96%   -3.64%  +2.04%  1.92   -52.6%    4.93%   403   133    55
+  ATR 2.5x         767  38.6%  +11.60%   -3.86%  +2.11%  1.89   -57.6%    5.13%   397   129    58
+  ATR 3.0x         732  39.9%  +11.45%   -4.28%  +1.99%  1.77   -59.4%    5.57%   367   123    51
+  No cap           435  40.9%  +10.00%   -4.03%  +1.71%  1.72   -64.4%    5.21%   207    69    33
+
+  BEST EXPECTANCY: ATR 2.5x (+2.11%/trade)
+  BEST PROFIT FACTOR: ATR 2.0x (1.92)
+  BEST DRAWDOWN: ATR 1.5x (-51.6%)

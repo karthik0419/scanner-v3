@@ -1,0 +1,97 @@
+
+Backtesting 51 symbol(s) | 2yr history | min_score=40.0 | scan_every=5d | SL: ATR
+
+  [1/51] Backtesting BHARATFORG.NS        29 trades
+  [2/51] Backtesting SCHAEFFLER.NS        15 trades
+  [3/51] Backtesting TIMKEN.NS            21 trades
+  [4/51] Backtesting SKFINDIA.NS          [SKIP SKFINDIA.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [5/51] Backtesting AIAENG.NS            18 trades
+  [6/51] Backtesting CRAFTSMAN.NS         23 trades
+  [7/51] Backtesting CUMMINSIND.NS        19 trades
+  [8/51] Backtesting THERMAX.NS           32 trades
+  [9/51] Backtesting ELGIEQUIP.NS         21 trades
+  [10/51] Backtesting CARBORUNIV.NS        34 trades
+  [11/51] Backtesting RKFORGE.NS           27 trades
+  [12/51] Backtesting CIEINDIA.NS          13 trades
+  [13/51] Backtesting ENDURANCE.NS         28 trades
+  [14/51] Backtesting GRINDWELL.NS         15 trades
+  [15/51] Backtesting UNOMINDA.NS          20 trades
+  [16/51] Backtesting TATACOMM.NS          20 trades
+  [17/51] Backtesting STLTECH.NS           21 trades
+  [18/51] Backtesting HFCL.NS              27 trades
+  [19/51] Backtesting INDUSTOWER.NS        14 trades
+  [20/51] Backtesting CDSL.NS              [SKIP CDSL.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [21/51] Backtesting BSE.NS               [SKIP BSE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [22/51] Backtesting ROUTE.NS             33 trades
+  [23/51] Backtesting TANLA.NS             24 trades
+  [24/51] Backtesting COFORGE.NS           [SKIP COFORGE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [25/51] Backtesting PERSISTENT.NS        28 trades
+  [26/51] Backtesting MPHASIS.NS           24 trades
+  [27/51] Backtesting KPITTECH.NS          13 trades
+  [28/51] Backtesting RAILTEL.NS           20 trades
+  [29/51] Backtesting ABB.NS               19 trades
+  [30/51] Backtesting SIEMENS.NS           [SKIP SIEMENS.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [31/51] Backtesting HAVELLS.NS           17 trades
+  [32/51] Backtesting POLYCAB.NS           18 trades
+  [33/51] Backtesting POWERGRID.NS         20 trades
+  [34/51] Backtesting TATAPOWER.NS         23 trades
+  [35/51] Backtesting TORNTPOWER.NS        19 trades
+  [36/51] Backtesting NTPC.NS              15 trades
+  [37/51] Backtesting ADANIGREEN.NS        21 trades
+  [38/51] Backtesting SUZLON.NS            20 trades
+  [39/51] Backtesting BLUESTARCO.NS        27 trades
+  [40/51] Backtesting VOLTAS.NS            25 trades
+  [41/51] Backtesting AMBER.NS             30 trades
+  [42/51] Backtesting EXIDEIND.NS          30 trades
+  [43/51] Backtesting AMARAJABAT.NS        19 trades
+  [44/51] Backtesting TEJASNET.NS          27 trades
+  [45/51] Backtesting ITI.NS               22 trades
+  [46/51] Backtesting VINDHYATEL.NS        27 trades
+  [47/51] Backtesting GTLINFRA.NS          29 trades
+  [48/51] Backtesting NELCO.NS             30 trades
+  [49/51] Backtesting ROSSARI.NS           35 trades
+  [50/51] Backtesting SHAKTIPUMP.NS        [SKIP SHAKTIPUMP.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [51/51] Backtesting POCL.NS              [SKIP POCL.NS] 2 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+
+=================================================================
+BACKTEST REPORT — v3
+=================================================================
+Total Trades    : 1012
+Wins            : 402  (39.7%)
+Losses          : 610  (60.3%)
+Avg Win         : +8.72%
+Avg Loss        : -2.92%
+Avg P&L / Trade : 1.70%
+Profit Factor   : 1.97
+Expectancy      : +1.70% per trade
+Max Drawdown    : -53.21%
+Avg Days Held   : 12.8
+
+--- By Pattern ---
+                      pattern  Trades  Wins   Win% Avg P&L   Best   Worst
+           Ascending Triangle       1     0   0.0%  -1.03% -1.03%  -1.03%
+              Breakout Retest       1     1 100.0%   1.00%  1.00%   1.00%
+Channel Breakout (Descending)       1     0   0.0%  -3.84% -3.84%  -3.84%
+                 Cup & Handle     310   100  32.3%   1.40% 59.83% -12.37%
+             Descending Wedge     111    43  38.7%   3.50% 43.34% -10.02%
+                Double Bottom     161    58  36.0%   2.17% 28.43%  -9.64%
+                     Re-entry     268   125  46.6%   0.47%  6.28%  -8.79%
+                 S&R Breakout      71    35  49.3%   2.34% 19.71%  -4.90%
+                  S&R Support      87    39  44.8%   2.93% 26.27%  -6.66%
+         Symmetrical Triangle       1     1 100.0%   9.49%  9.49%   9.49%
+
+--- By Exit Reason ---
+  exit_reason  Trades Avg P&L
+  End of Data      15   1.22%
+    Stop Loss     430  -3.86%
+     Target 1     201   6.85%
+     Target 2     133   7.47%
+    Time Exit     129   7.72%
+Trailing Stop     104   0.00%
+
+--- By Year ---
+ year  Trades  Win% Avg P&L
+ 2025     602 38.9%   1.09%
+ 2026     410 41.0%   2.60%
+
+Full results saved to: results/backtest_v3_reentry.csv

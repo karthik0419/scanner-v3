@@ -1,0 +1,429 @@
+
+======================================================================
+  V3 vs V2 BACKTEST COMPARISON
+  178 stocks | 2 years | min_score=40.0
+======================================================================
+
+[1/2] Running v3 backtest (ATR stops, trailing after T1)...
+  [1/178] Backtesting RELIANCE.NS          [SKIP RELIANCE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [2/178] Backtesting TCS.NS               26 trades
+  [3/178] Backtesting HDFCBANK.NS          [SKIP HDFCBANK.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [4/178] Backtesting ICICIBANK.NS         23 trades
+  [5/178] Backtesting BHARTIARTL.NS        15 trades
+  [6/178] Backtesting INFY.NS              18 trades
+  [7/178] Backtesting SBIN.NS              18 trades
+  [8/178] Backtesting HINDUNILVR.NS        18 trades
+  [9/178] Backtesting ITC.NS               16 trades
+  [10/178] Backtesting LT.NS                22 trades
+  [11/178] Backtesting BAJFINANCE.NS        [SKIP BAJFINANCE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [12/178] Backtesting HCLTECH.NS           17 trades
+  [13/178] Backtesting MARUTI.NS            17 trades
+  [14/178] Backtesting SUNPHARMA.NS         11 trades
+  [15/178] Backtesting ADANIENT.NS          23 trades
+  [16/178] Backtesting KOTAKBANK.NS         [SKIP KOTAKBANK.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [17/178] Backtesting TITAN.NS             15 trades
+  [18/178] Backtesting ONGC.NS              25 trades
+  [19/178] Backtesting NTPC.NS              15 trades
+  [20/178] Backtesting AXISBANK.NS          19 trades
+  [21/178] Backtesting WIPRO.NS             [SKIP WIPRO.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [22/178] Backtesting ULTRACEMCO.NS        12 trades
+  [23/178] Backtesting JSWSTEEL.NS          18 trades
+  [24/178] Backtesting POWERGRID.NS         20 trades
+  [25/178] Backtesting M&M.NS               13 trades
+  [26/178] Backtesting NESTLEIND.NS         [SKIP NESTLEIND.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [27/178] Backtesting TECHM.NS             15 trades
+  [28/178] Backtesting TATAMOTORS.NS        [SKIP TATAMOTORS.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [29/178] Backtesting TATASTEEL.NS         16 trades
+  [30/178] Backtesting ADANIGREEN.NS        21 trades
+  [31/178] Backtesting COALINDIA.NS         22 trades
+  [32/178] Backtesting BAJAJFINSV.NS        16 trades
+  [33/178] Backtesting HINDALCO.NS          19 trades
+  [34/178] Backtesting BRITANNIA.NS         10 trades
+  [35/178] Backtesting DIVISLAB.NS          20 trades
+  [36/178] Backtesting DRREDDY.NS           [SKIP DRREDDY.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [37/178] Backtesting CIPLA.NS             13 trades
+  [38/178] Backtesting GRASIM.NS            16 trades
+  [39/178] Backtesting BPCL.NS              15 trades
+  [40/178] Backtesting APOLLOHOSP.NS        14 trades
+  [41/178] Backtesting EICHERMOT.NS         14 trades
+  [42/178] Backtesting HEROMOTOCO.NS        12 trades
+  [43/178] Backtesting INDUSINDBK.NS        21 trades
+  [44/178] Backtesting TATACONSUM.NS        14 trades
+  [45/178] Backtesting SBILIFE.NS           18 trades
+  [46/178] Backtesting HDFCLIFE.NS          12 trades
+  [47/178] Backtesting ICICIPRULI.NS        24 trades
+  [48/178] Backtesting BAJAJ-AUTO.NS        15 trades
+  [49/178] Backtesting VEDL.NS              [SKIP VEDL.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [50/178] Backtesting SHREECEM.NS          17 trades
+  [51/178] Backtesting ADANIPORTS.NS        14 trades
+  [52/178] Backtesting AMBUJACEM.NS         20 trades
+  [53/178] Backtesting ABB.NS               19 trades
+  [54/178] Backtesting BANKBARODA.NS        19 trades
+  [55/178] Backtesting BEL.NS               11 trades
+  [56/178] Backtesting BERGEPAINT.NS        15 trades
+  [57/178] Backtesting BOSCHLTD.NS          11 trades
+  [58/178] Backtesting CANBK.NS             14 trades
+  [59/178] Backtesting CHOLAFIN.NS          19 trades
+  [60/178] Backtesting COLPAL.NS            18 trades
+  [61/178] Backtesting CUMMINSIND.NS        19 trades
+  [62/178] Backtesting DLF.NS               33 trades
+  [63/178] Backtesting GAIL.NS              26 trades
+  [64/178] Backtesting GODREJCP.NS          12 trades
+  [65/178] Backtesting HAVELLS.NS           17 trades
+  [66/178] Backtesting INDHOTEL.NS          18 trades
+  [67/178] Backtesting INDUSTOWER.NS        14 trades
+  [68/178] Backtesting IRCTC.NS             20 trades
+  [69/178] Backtesting JINDALSTEL.NS        15 trades
+  [70/178] Backtesting LICI.NS              [SKIP LICI.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [71/178] Backtesting LTIM.NS              21 trades
+  [72/178] Backtesting LUPIN.NS             15 trades
+  [73/178] Backtesting MANKIND.NS           25 trades
+  [74/178] Backtesting MARICO.NS            19 trades
+  [75/178] Backtesting MUTHOOTFIN.NS        23 trades
+  [76/178] Backtesting NAUKRI.NS            [SKIP NAUKRI.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [77/178] Backtesting NHPC.NS              20 trades
+  [78/178] Backtesting PIDILITIND.NS        [SKIP PIDILITIND.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [79/178] Backtesting PNB.NS               13 trades
+  [80/178] Backtesting RECLTD.NS            27 trades
+  [81/178] Backtesting SAIL.NS              28 trades
+  [82/178] Backtesting SBICARD.NS           25 trades
+  [83/178] Backtesting SIEMENS.NS           [SKIP SIEMENS.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [84/178] Backtesting TATAPOWER.NS         23 trades
+  [85/178] Backtesting TORNTPHARM.NS        20 trades
+  [86/178] Backtesting TRENT.NS             24 trades
+  [87/178] Backtesting UPL.NS               32 trades
+  [88/178] Backtesting VBL.NS               [SKIP VBL.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [89/178] Backtesting VOLTAS.NS            25 trades
+  [90/178] Backtesting ZOMATO.NS            31 trades
+  [91/178] Backtesting ZYDUSLIFE.NS         11 trades
+  [92/178] Backtesting CDSL.NS              [SKIP CDSL.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [93/178] Backtesting BSE.NS               [SKIP BSE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [94/178] Backtesting MCX.NS               [SKIP MCX.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [95/178] Backtesting ANGELONE.NS          [SKIP ANGELONE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [96/178] Backtesting CAMS.NS              [SKIP CAMS.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [97/178] Backtesting MFSL.NS              12 trades
+  [98/178] Backtesting BHARATFORG.NS        29 trades
+  [99/178] Backtesting SCHAEFFLER.NS        15 trades
+  [100/178] Backtesting TIMKEN.NS            21 trades
+  [101/178] Backtesting SKFINDIA.NS          [SKIP SKFINDIA.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [102/178] Backtesting AIAENG.NS            18 trades
+  [103/178] Backtesting CRAFTSMAN.NS         23 trades
+  [104/178] Backtesting THERMAX.NS           32 trades
+  [105/178] Backtesting ELGIEQUIP.NS         21 trades
+  [106/178] Backtesting CARBORUNIV.NS        34 trades
+  [107/178] Backtesting RKFORGE.NS           27 trades
+  [108/178] Backtesting CIEINDIA.NS          13 trades
+  [109/178] Backtesting ENDURANCE.NS         28 trades
+  [110/178] Backtesting GRINDWELL.NS         15 trades
+  [111/178] Backtesting KAJARIACER.NS        38 trades
+  [112/178] Backtesting SUPRAJIT.NS          20 trades
+  [113/178] Backtesting TATACOMM.NS          20 trades
+  [114/178] Backtesting STLTECH.NS           21 trades
+  [115/178] Backtesting HFCL.NS              27 trades
+  [116/178] Backtesting ROUTE.NS             33 trades
+  [117/178] Backtesting TANLA.NS             24 trades
+  [118/178] Backtesting COFORGE.NS           [SKIP COFORGE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [119/178] Backtesting PERSISTENT.NS        28 trades
+  [120/178] Backtesting MPHASIS.NS           24 trades
+  [121/178] Backtesting KPITTECH.NS          13 trades
+  [122/178] Backtesting RAILTEL.NS           20 trades
+  [123/178] Backtesting TEJASNET.NS          27 trades
+  [124/178] Backtesting ITI.NS               22 trades
+  [125/178] Backtesting VINDHYATEL.NS        27 trades
+  [126/178] Backtesting NELCO.NS             30 trades
+  [127/178] Backtesting TORNTPOWER.NS        19 trades
+  [128/178] Backtesting ADANIGREEN.NS        21 trades
+  [129/178] Backtesting SUZLON.NS            20 trades
+  [130/178] Backtesting INOXWIND.NS          31 trades
+  [131/178] Backtesting POLYCAB.NS           18 trades
+  [132/178] Backtesting KEI.NS               16 trades
+  [133/178] Backtesting APARINDS.NS          23 trades
+  [134/178] Backtesting TRIL.NS              [SKIP TRIL.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [135/178] Backtesting JYOTICNC.NS          31 trades
+  [136/178] Backtesting NBCC.NS              27 trades
+  [137/178] Backtesting RITES.NS             [SKIP RITES.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [138/178] Backtesting IRFC.NS              22 trades
+  [139/178] Backtesting PFC.NS               20 trades
+  [140/178] Backtesting REC.NS               HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: REC.NS"}}}
+$REC.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['REC.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+0 trades
+  [141/178] Backtesting BLUESTARCO.NS        27 trades
+  [142/178] Backtesting AMBER.NS             30 trades
+  [143/178] Backtesting EXIDEIND.NS          30 trades
+  [144/178] Backtesting AMARAJABAT.NS        19 trades
+  [145/178] Backtesting GREENPANEL.NS        32 trades
+  [146/178] Backtesting GESHIP.NS            13 trades
+  [147/178] Backtesting SCI.NS               27 trades
+  [148/178] Backtesting CONCOR.NS            32 trades
+  [149/178] Backtesting MAHLOG.NS            19 trades
+  [150/178] Backtesting BLUEDART.NS          11 trades
+  [151/178] Backtesting AUROPHARMA.NS        16 trades
+  [152/178] Backtesting ALKEM.NS             16 trades
+  [153/178] Backtesting GLENMARK.NS          14 trades
+  [154/178] Backtesting GRANULES.NS          18 trades
+  [155/178] Backtesting LAURUSLABS.NS        24 trades
+  [156/178] Backtesting BIOCON.NS            11 trades
+  [157/178] Backtesting SUNPHARMA.NS         11 trades
+  [158/178] Backtesting IPCALAB.NS           19 trades
+  [159/178] Backtesting PFIZER.NS            24 trades
+  [160/178] Backtesting SANOFI.NS            22 trades
+  [161/178] Backtesting ABBOTINDIA.NS        20 trades
+  [162/178] Backtesting METROPOLIS.NS        [SKIP METROPOLIS.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [163/178] Backtesting THYROCARE.NS         [SKIP THYROCARE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [164/178] Backtesting LALPATHLAB.NS        [SKIP LALPATHLAB.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [165/178] Backtesting MAXHEALTH.NS         14 trades
+  [166/178] Backtesting FORTIS.NS            22 trades
+  [167/178] Backtesting NARAYANA.NS          HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: NARAYANA.NS"}}}
+$NARAYANA.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['NARAYANA.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+0 trades
+  [168/178] Backtesting FEDERALBNK.NS        17 trades
+  [169/178] Backtesting IDFCFIRSTB.NS        16 trades
+  [170/178] Backtesting RBLBANK.NS           17 trades
+  [171/178] Backtesting AUBANK.NS            13 trades
+  [172/178] Backtesting BANDHANBNK.NS        30 trades
+  [173/178] Backtesting LICHSGFIN.NS         18 trades
+  [174/178] Backtesting MANAPPURAM.NS        23 trades
+  [175/178] Backtesting BAJAJHLDNG.NS        20 trades
+  [176/178] Backtesting MOTILALOFS.NS        37 trades
+  [177/178] Backtesting ICICIGI.NS           19 trades
+  [178/178] Backtesting HDFCAMC.NS           [SKIP HDFCAMC.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+
+[2/2] Running v2 backtest (original stops, no trailing)...
+  [1/178] Backtesting RELIANCE.NS          [SKIP RELIANCE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [2/178] Backtesting TCS.NS               19 trades
+  [3/178] Backtesting HDFCBANK.NS          [SKIP HDFCBANK.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [4/178] Backtesting ICICIBANK.NS         19 trades
+  [5/178] Backtesting BHARTIARTL.NS        13 trades
+  [6/178] Backtesting INFY.NS              13 trades
+  [7/178] Backtesting SBIN.NS              10 trades
+  [8/178] Backtesting HINDUNILVR.NS        16 trades
+  [9/178] Backtesting ITC.NS               11 trades
+  [10/178] Backtesting LT.NS                19 trades
+  [11/178] Backtesting BAJFINANCE.NS        [SKIP BAJFINANCE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [12/178] Backtesting HCLTECH.NS           22 trades
+  [13/178] Backtesting MARUTI.NS            11 trades
+  [14/178] Backtesting SUNPHARMA.NS         8 trades
+  [15/178] Backtesting ADANIENT.NS          16 trades
+  [16/178] Backtesting KOTAKBANK.NS         [SKIP KOTAKBANK.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [17/178] Backtesting TITAN.NS             7 trades
+  [18/178] Backtesting ONGC.NS              14 trades
+  [19/178] Backtesting NTPC.NS              8 trades
+  [20/178] Backtesting AXISBANK.NS          9 trades
+  [21/178] Backtesting WIPRO.NS             [SKIP WIPRO.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [22/178] Backtesting ULTRACEMCO.NS        9 trades
+  [23/178] Backtesting JSWSTEEL.NS          11 trades
+  [24/178] Backtesting POWERGRID.NS         16 trades
+  [25/178] Backtesting M&M.NS               10 trades
+  [26/178] Backtesting NESTLEIND.NS         [SKIP NESTLEIND.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [27/178] Backtesting TECHM.NS             10 trades
+  [28/178] Backtesting TATAMOTORS.NS        [SKIP TATAMOTORS.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [29/178] Backtesting TATASTEEL.NS         5 trades
+  [30/178] Backtesting ADANIGREEN.NS        10 trades
+  [31/178] Backtesting COALINDIA.NS         8 trades
+  [32/178] Backtesting BAJAJFINSV.NS        12 trades
+  [33/178] Backtesting HINDALCO.NS          5 trades
+  [34/178] Backtesting BRITANNIA.NS         8 trades
+  [35/178] Backtesting DIVISLAB.NS          11 trades
+  [36/178] Backtesting DRREDDY.NS           [SKIP DRREDDY.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [37/178] Backtesting CIPLA.NS             11 trades
+  [38/178] Backtesting GRASIM.NS            13 trades
+  [39/178] Backtesting BPCL.NS              10 trades
+  [40/178] Backtesting APOLLOHOSP.NS        10 trades
+  [41/178] Backtesting EICHERMOT.NS         8 trades
+  [42/178] Backtesting HEROMOTOCO.NS        12 trades
+  [43/178] Backtesting INDUSINDBK.NS        14 trades
+  [44/178] Backtesting TATACONSUM.NS        11 trades
+  [45/178] Backtesting SBILIFE.NS           13 trades
+  [46/178] Backtesting HDFCLIFE.NS          16 trades
+  [47/178] Backtesting ICICIPRULI.NS        13 trades
+  [48/178] Backtesting BAJAJ-AUTO.NS        11 trades
+  [49/178] Backtesting VEDL.NS              [SKIP VEDL.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [50/178] Backtesting SHREECEM.NS          15 trades
+  [51/178] Backtesting ADANIPORTS.NS        9 trades
+  [52/178] Backtesting AMBUJACEM.NS         11 trades
+  [53/178] Backtesting ABB.NS               14 trades
+  [54/178] Backtesting BANKBARODA.NS        12 trades
+  [55/178] Backtesting BEL.NS               4 trades
+  [56/178] Backtesting BERGEPAINT.NS        10 trades
+  [57/178] Backtesting BOSCHLTD.NS          10 trades
+  [58/178] Backtesting CANBK.NS             12 trades
+  [59/178] Backtesting CHOLAFIN.NS          11 trades
+  [60/178] Backtesting COLPAL.NS            18 trades
+  [61/178] Backtesting CUMMINSIND.NS        9 trades
+  [62/178] Backtesting DLF.NS               17 trades
+  [63/178] Backtesting GAIL.NS              21 trades
+  [64/178] Backtesting GODREJCP.NS          9 trades
+  [65/178] Backtesting HAVELLS.NS           15 trades
+  [66/178] Backtesting INDHOTEL.NS          17 trades
+  [67/178] Backtesting INDUSTOWER.NS        9 trades
+  [68/178] Backtesting IRCTC.NS             14 trades
+  [69/178] Backtesting JINDALSTEL.NS        9 trades
+  [70/178] Backtesting LICI.NS              [SKIP LICI.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [71/178] Backtesting LTIM.NS              22 trades
+  [72/178] Backtesting LUPIN.NS             9 trades
+  [73/178] Backtesting MANKIND.NS           13 trades
+  [74/178] Backtesting MARICO.NS            8 trades
+  [75/178] Backtesting MUTHOOTFIN.NS        8 trades
+  [76/178] Backtesting NAUKRI.NS            [SKIP NAUKRI.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [77/178] Backtesting NHPC.NS              11 trades
+  [78/178] Backtesting PIDILITIND.NS        [SKIP PIDILITIND.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [79/178] Backtesting PNB.NS               10 trades
+  [80/178] Backtesting RECLTD.NS            14 trades
+  [81/178] Backtesting SAIL.NS              23 trades
+  [82/178] Backtesting SBICARD.NS           18 trades
+  [83/178] Backtesting SIEMENS.NS           [SKIP SIEMENS.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [84/178] Backtesting TATAPOWER.NS         16 trades
+  [85/178] Backtesting TORNTPHARM.NS        8 trades
+  [86/178] Backtesting TRENT.NS             15 trades
+  [87/178] Backtesting UPL.NS               21 trades
+  [88/178] Backtesting VBL.NS               [SKIP VBL.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [89/178] Backtesting VOLTAS.NS            20 trades
+  [90/178] Backtesting ZOMATO.NS            26 trades
+  [91/178] Backtesting ZYDUSLIFE.NS         10 trades
+  [92/178] Backtesting CDSL.NS              [SKIP CDSL.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [93/178] Backtesting BSE.NS               [SKIP BSE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [94/178] Backtesting MCX.NS               [SKIP MCX.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [95/178] Backtesting ANGELONE.NS          [SKIP ANGELONE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [96/178] Backtesting CAMS.NS              [SKIP CAMS.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [97/178] Backtesting MFSL.NS              4 trades
+  [98/178] Backtesting BHARATFORG.NS        9 trades
+  [99/178] Backtesting SCHAEFFLER.NS        4 trades
+  [100/178] Backtesting TIMKEN.NS            10 trades
+  [101/178] Backtesting SKFINDIA.NS          [SKIP SKFINDIA.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [102/178] Backtesting AIAENG.NS            10 trades
+  [103/178] Backtesting CRAFTSMAN.NS         15 trades
+  [104/178] Backtesting THERMAX.NS           9 trades
+  [105/178] Backtesting ELGIEQUIP.NS         10 trades
+  [106/178] Backtesting CARBORUNIV.NS        26 trades
+  [107/178] Backtesting RKFORGE.NS           14 trades
+  [108/178] Backtesting CIEINDIA.NS          3 trades
+  [109/178] Backtesting ENDURANCE.NS         9 trades
+  [110/178] Backtesting GRINDWELL.NS         10 trades
+  [111/178] Backtesting KAJARIACER.NS        19 trades
+  [112/178] Backtesting SUPRAJIT.NS          7 trades
+  [113/178] Backtesting TATACOMM.NS          14 trades
+  [114/178] Backtesting STLTECH.NS           12 trades
+  [115/178] Backtesting HFCL.NS              14 trades
+  [116/178] Backtesting ROUTE.NS             20 trades
+  [117/178] Backtesting TANLA.NS             23 trades
+  [118/178] Backtesting COFORGE.NS           [SKIP COFORGE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [119/178] Backtesting PERSISTENT.NS        18 trades
+  [120/178] Backtesting MPHASIS.NS           18 trades
+  [121/178] Backtesting KPITTECH.NS          16 trades
+  [122/178] Backtesting RAILTEL.NS           7 trades
+  [123/178] Backtesting TEJASNET.NS          24 trades
+  [124/178] Backtesting ITI.NS               14 trades
+  [125/178] Backtesting VINDHYATEL.NS        12 trades
+  [126/178] Backtesting NELCO.NS             17 trades
+  [127/178] Backtesting TORNTPOWER.NS        12 trades
+  [128/178] Backtesting ADANIGREEN.NS        10 trades
+  [129/178] Backtesting SUZLON.NS            13 trades
+  [130/178] Backtesting INOXWIND.NS          22 trades
+  [131/178] Backtesting POLYCAB.NS           8 trades
+  [132/178] Backtesting KEI.NS               7 trades
+  [133/178] Backtesting APARINDS.NS          13 trades
+  [134/178] Backtesting TRIL.NS              [SKIP TRIL.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [135/178] Backtesting JYOTICNC.NS          25 trades
+  [136/178] Backtesting NBCC.NS              13 trades
+  [137/178] Backtesting RITES.NS             [SKIP RITES.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [138/178] Backtesting IRFC.NS              10 trades
+  [139/178] Backtesting PFC.NS               16 trades
+  [140/178] Backtesting REC.NS               $REC.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['REC.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+0 trades
+  [141/178] Backtesting BLUESTARCO.NS        25 trades
+  [142/178] Backtesting AMBER.NS             15 trades
+  [143/178] Backtesting EXIDEIND.NS          21 trades
+  [144/178] Backtesting AMARAJABAT.NS        15 trades
+  [145/178] Backtesting GREENPANEL.NS        22 trades
+  [146/178] Backtesting GESHIP.NS            7 trades
+  [147/178] Backtesting SCI.NS               6 trades
+  [148/178] Backtesting CONCOR.NS            28 trades
+  [149/178] Backtesting MAHLOG.NS            7 trades
+  [150/178] Backtesting BLUEDART.NS          10 trades
+  [151/178] Backtesting AUROPHARMA.NS        7 trades
+  [152/178] Backtesting ALKEM.NS             11 trades
+  [153/178] Backtesting GLENMARK.NS          4 trades
+  [154/178] Backtesting GRANULES.NS          9 trades
+  [155/178] Backtesting LAURUSLABS.NS        8 trades
+  [156/178] Backtesting BIOCON.NS            3 trades
+  [157/178] Backtesting SUNPHARMA.NS         8 trades
+  [158/178] Backtesting IPCALAB.NS           9 trades
+  [159/178] Backtesting PFIZER.NS            18 trades
+  [160/178] Backtesting SANOFI.NS            14 trades
+  [161/178] Backtesting ABBOTINDIA.NS        10 trades
+  [162/178] Backtesting METROPOLIS.NS        [SKIP METROPOLIS.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [163/178] Backtesting THYROCARE.NS         [SKIP THYROCARE.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [164/178] Backtesting LALPATHLAB.NS        [SKIP LALPATHLAB.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [165/178] Backtesting MAXHEALTH.NS         12 trades
+  [166/178] Backtesting FORTIS.NS            16 trades
+  [167/178] Backtesting NARAYANA.NS          $NARAYANA.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['NARAYANA.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+0 trades
+  [168/178] Backtesting FEDERALBNK.NS        4 trades
+  [169/178] Backtesting IDFCFIRSTB.NS        7 trades
+  [170/178] Backtesting RBLBANK.NS           6 trades
+  [171/178] Backtesting AUBANK.NS            6 trades
+  [172/178] Backtesting BANDHANBNK.NS        18 trades
+  [173/178] Backtesting LICHSGFIN.NS         13 trades
+  [174/178] Backtesting MANAPPURAM.NS        10 trades
+  [175/178] Backtesting BAJAJHLDNG.NS        12 trades
+  [176/178] Backtesting MOTILALOFS.NS        22 trades
+  [177/178] Backtesting ICICIGI.NS           18 trades
+  [178/178] Backtesting HDFCAMC.NS           [SKIP HDFCAMC.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+
+======================================================================
+  COMPARISON REPORT
+======================================================================
+  Metric                 v3 (ATR+trail)    v2 (original)      Delta
+  -----------------------------------------------------------------
+  trades                           3012             1888      +1124
+  wins                             1223              858           
+  losses                           1789             1030           
+  win_rate                         40.6             45.4      -4.80
+  avg_win                          7.56             6.59      +0.97
+  avg_loss                        -2.98            -3.35      +0.37
+  expectancy                        1.3             1.17      +0.13
+  profit_factor                    1.73             1.64      +0.09
+  max_drawdown                   -60.08           -61.45      +1.37
+
+======================================================================
+  BY PATTERN — v3 vs v2
+======================================================================
+                      pattern  trades_v3 win_rate_v3 avg_pnl_v3 trades_v2 win_rate_v2 avg_pnl_v2
+           Ascending Triangle          3        0.0%     -1.62%       1.0      100.0%      6.65%
+              Breakout Retest          7       42.9%      1.10%       7.0       42.9%      1.75%
+Channel Breakout (Descending)          2       50.0%      2.90%       4.0       50.0%      1.52%
+                 Cup & Handle       1201       34.3%      0.82%     681.0       43.6%      0.72%
+             Descending Wedge        315       35.6%      1.85%     203.0       29.1%      0.44%
+                Double Bottom        399       40.9%      2.06%      28.0       67.9%      4.42%
+       Higher-Low Compression          2      100.0%      7.20%         -           -          -
+                     Re-entry        691       49.2%      0.58%     535.0       52.3%      0.73%
+                 S&R Breakout        166       46.4%      1.88%     183.0       42.1%      1.54%
+                  S&R Support        213       50.2%      3.52%     226.0       49.1%      3.28%
+         Symmetrical Triangle         13       46.2%      3.39%      20.0       45.0%      3.19%
+
+======================================================================
+  V3 EXIT REASONS
+======================================================================
+  exit_reason  trades avg_pnl
+  End of Data      89   2.83%
+    Stop Loss    1306  -3.75%
+     Target 1     511   5.97%
+     Target 2     329   6.62%
+    Time Exit     527   6.33%
+Trailing Stop     250   0.00%
+
+  CSVs saved: results/backtest_v3.csv, results/backtest_v2.csv
+======================================================================
+

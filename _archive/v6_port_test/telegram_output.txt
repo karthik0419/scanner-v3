@@ -1,0 +1,75 @@
+Reading: results/v3_2026-07-29.csv
+Sending to Telegram...
+<b>📊 [V3] WEEKLY SWING SCAN — 29 Jul 2026</b>
+🔍 Scanned: Full NSE EQ (~2000+ stocks) | Found: 11 setups
+
+━━━━━━━━━━━━━━━━━━━
+🥇 <b>PNB</b> | Score: 65.8 | Double Bottom [Daily]
+🏭 PSU Bank 🔴 WEAK
+💰 CMP: ₹111.65  |  Entry: ₹115.6
+🛑 Stop: ₹110.88  |  🎯 T1: ₹124.15
+📈 Upside: 11.2%  |  RR: 16.23x
+━━━━━━━━━━━━━━━━━━━
+🥈 <b>SCI</b> | Score: 61.3 | Double Bottom [Daily]
+🏭 Services  Unknown
+💰 CMP: ₹278.9  |  Entry: ₹280.5
+🛑 Stop: ₹262.84  |  🎯 T1: ₹322.98
+📈 Upside: 15.14%  |  RR: 1.92x
+━━━━━━━━━━━━━━━━━━━
+🥉 <b>ZOMATO</b> | Score: 60.6 | Cup & Handle [Monthly]
+📐 Neckline: flat
+💰 CMP: ₹308.35  |  Entry: ₹323.6
+🛑 Stop: ₹302.11  |  🎯 T1: ₹388.0
+📈 Upside: 25.83%  |  RR: 12.76x
+━━━━━━━━━━━━━━━━━━━
+4⃣ <b>MANAPPURAM</b> | Score: 59.3 | Cup & Handle [Monthly]
+🏭 Banking 🔴 WEAK
+📐 Neckline: flat
+💰 CMP: ₹361.25  |  Entry: ₹363.0
+🛑 Stop: ₹343.51  |  🎯 T1: ₹454.62
+📈 Upside: 25.24%  |  RR: 4.7x
+━━━━━━━━━━━━━━━━━━━
+5⃣ <b>FEDERALBNK</b> | Score: 59.3 | Cup & Handle [Monthly]
+🏭 Banking 🔴 WEAK
+📐 Neckline: flat
+💰 CMP: ₹357.25  |  Entry: ₹358.7
+🛑 Stop: ₹343.79  |  🎯 T1: ₹423.37
+📈 Upside: 18.03%  |  RR: 4.34x
+━━━━━━━━━━━━━━━━━━━
+6⃣ <b>BPCL</b> | Score: 58.0 | Cup & Handle [Weekly]
+🏭 Energy 🔴 WEAK
+📐 Neckline: descending
+💰 CMP: ₹320.05  |  Entry: ₹321.9
+🛑 Stop: ₹306.19  |  🎯 T1: ₹384.42
+📈 Upside: 19.42%  |  RR: 3.98x
+━━━━━━━━━━━━━━━━━━━
+7⃣ <b>GAIL</b> | Score: 58.0 | Cup & Handle [Weekly]
+🏭 Energy 🔴 WEAK
+📐 Neckline: descending
+💰 CMP: ₹175.15  |  Entry: ₹176.99
+🛑 Stop: ₹163.92  |  🎯 T1: ₹232.96
+📈 Upside: 31.62%  |  RR: 3.43x
+━━━━━━━━━━━━━━━━━━━
+8⃣ <b>RECLTD</b> | Score: 58.0 | Cup & Handle [Weekly]
+🏭 Banking 🔴 WEAK
+📐 Neckline: descending
+💰 CMP: ₹368.45  |  Entry: ₹372.1
+🛑 Stop: ₹356.84  |  🎯 T1: ₹444.07
+📈 Upside: 19.34%  |  RR: 4.72x
+━━━━━━━━━━━━━━━━━━━
+9⃣ <b>RBLBANK</b> | Score: 54.1 | Cup & Handle [Monthly]
+🏭 Banking 🔴 WEAK
+📐 Neckline: flat
+💰 CMP: ₹364.9  |  Entry: ₹382.35
+🛑 Stop: ₹362.72  |  🎯 T1: ₹482.12
+📈 Upside: 32.12%  |  RR: 53.77x
+━━━━━━━━━━━━━━━━━━━
+10⃣ <b>VEDL</b> | Score: 48.3 | Descending Wedge [Daily]
+🏭 Metals 🔴 WEAK
+💰 CMP: ₹259.35  |  Entry: ₹253.19
+🛑 Stop: ₹244.55  |  🎯 T1: ₹334.92
+📈 Upside: 32.28%  |  RR: 9.46x
+━━━━━━━━━━━━━━━━━━━
+
+⚠️ For research only. Not financial advice.
+Sent successfully.

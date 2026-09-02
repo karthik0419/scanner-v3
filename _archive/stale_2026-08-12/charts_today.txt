@@ -1,0 +1,17 @@
+  Reading charts from: v3_2026-07-29.csv (11 setups)
+Saving to F:\projects\claude\scanner-v3\results\charts/daily|weekly|monthly
+Generating charts for 11 stocks...
+
+  PNB: 3 charts saved
+  SCI: 3 charts saved
+  ZOMATO: 3 charts saved
+  MANAPPURAM: 3 charts saved
+  FEDERALBNK: 3 charts saved
+  BPCL: 3 charts saved
+  GAIL: 3 charts saved
+  RECLTD: 3 charts saved
+  RBLBANK: 3 charts saved
+  VEDL: 3 charts saved
+  SAIL: 3 charts saved
+
+Done.

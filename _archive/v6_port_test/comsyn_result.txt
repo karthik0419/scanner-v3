@@ -1,0 +1,26 @@
+COMSYN.NS — CURRENT STATUS
+=======================================================
+  Latest close:  Rs.217.58
+  Breakout:      Rs.224.6
+  Distance:      3.2% below breakout
+  Needs:         Rs.7.02 more to break out
+
+  STATUS: NEAR (within 5% of breakout)
+
+  ZONES:
+    WATCH:  Rs.202.14 - Rs.213.37
+    NEAR:   Rs.213.37 - Rs.224.60
+    BREAK:  above Rs.224.60
+
+  COMSYN at Rs.217.58 is in the WATCH zone!
+  Only 3.2% from breakout
+  Up from Rs.174.48 on July 27 = +24.7% in 2 days
+
+  IF IT BREAKS OUT AT Rs.224.6:
+    SL (v3.1):  Rs.206.63  (8% below)
+    T1:         Rs.312.75  (+39.2%)
+    T2:         Rs.371.52  (+65.4%)
+    R:R:        1:4.9
+
+  OLD SL was Rs.148.47 (14.9% risk) — v3.1 caps it at Rs.206.63 (8%)
+  The SL is right around current price (217.58) — manageable risk

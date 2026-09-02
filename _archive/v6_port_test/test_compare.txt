@@ -1,0 +1,154 @@
+
+======================================================================
+  V3 vs V2 BACKTEST COMPARISON
+  51 stocks | 1 years | min_score=40.0
+======================================================================
+
+[1/2] Running v3 backtest (ATR stops, trailing after T1)...
+  [1/51] Backtesting BHARATFORG.NS        5 trades
+  [2/51] Backtesting SCHAEFFLER.NS        6 trades
+  [3/51] Backtesting TIMKEN.NS            5 trades
+  [4/51] Backtesting SKFINDIA.NS          [SKIP SKFINDIA.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [5/51] Backtesting AIAENG.NS            6 trades
+  [6/51] Backtesting CRAFTSMAN.NS         7 trades
+  [7/51] Backtesting CUMMINSIND.NS        4 trades
+  [8/51] Backtesting THERMAX.NS           10 trades
+  [9/51] Backtesting ELGIEQUIP.NS         6 trades
+  [10/51] Backtesting CARBORUNIV.NS        4 trades
+  [11/51] Backtesting RKFORGE.NS           9 trades
+  [12/51] Backtesting CIEINDIA.NS          10 trades
+  [13/51] Backtesting ENDURANCE.NS         4 trades
+  [14/51] Backtesting GRINDWELL.NS         6 trades
+  [15/51] Backtesting UNOMINDA.NS          10 trades
+  [16/51] Backtesting TATACOMM.NS          13 trades
+  [17/51] Backtesting STLTECH.NS           12 trades
+  [18/51] Backtesting HFCL.NS              9 trades
+  [19/51] Backtesting INDUSTOWER.NS        3 trades
+  [20/51] Backtesting CDSL.NS              10 trades
+  [21/51] Backtesting BSE.NS               6 trades
+  [22/51] Backtesting ROUTE.NS             4 trades
+  [23/51] Backtesting TANLA.NS             5 trades
+  [24/51] Backtesting COFORGE.NS           11 trades
+  [25/51] Backtesting PERSISTENT.NS        11 trades
+  [26/51] Backtesting MPHASIS.NS           8 trades
+  [27/51] Backtesting KPITTECH.NS          10 trades
+  [28/51] Backtesting RAILTEL.NS           7 trades
+  [29/51] Backtesting ABB.NS               7 trades
+  [30/51] Backtesting SIEMENS.NS           10 trades
+  [31/51] Backtesting HAVELLS.NS           3 trades
+  [32/51] Backtesting POLYCAB.NS           13 trades
+  [33/51] Backtesting POWERGRID.NS         4 trades
+  [34/51] Backtesting TATAPOWER.NS         9 trades
+  [35/51] Backtesting TORNTPOWER.NS        11 trades
+  [36/51] Backtesting NTPC.NS              7 trades
+  [37/51] Backtesting ADANIGREEN.NS        9 trades
+  [38/51] Backtesting SUZLON.NS            5 trades
+  [39/51] Backtesting BLUESTARCO.NS        8 trades
+  [40/51] Backtesting VOLTAS.NS            4 trades
+  [41/51] Backtesting AMBER.NS             7 trades
+  [42/51] Backtesting EXIDEIND.NS          11 trades
+  [43/51] Backtesting AMARAJABAT.NS        9 trades
+  [44/51] Backtesting TEJASNET.NS          4 trades
+  [45/51] Backtesting ITI.NS               11 trades
+  [46/51] Backtesting VINDHYATEL.NS        8 trades
+  [47/51] Backtesting GTLINFRA.NS          10 trades
+  [48/51] Backtesting NELCO.NS             9 trades
+  [49/51] Backtesting ROSSARI.NS           5 trades
+  [50/51] Backtesting SHAKTIPUMP.NS        2 trades
+  [51/51] Backtesting POCL.NS              [SKIP POCL.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+
+[2/2] Running v2 backtest (original stops, no trailing)...
+  [1/51] Backtesting BHARATFORG.NS        2 trades
+  [2/51] Backtesting SCHAEFFLER.NS        4 trades
+  [3/51] Backtesting TIMKEN.NS            2 trades
+  [4/51] Backtesting SKFINDIA.NS          [SKIP SKFINDIA.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+  [5/51] Backtesting AIAENG.NS            5 trades
+  [6/51] Backtesting CRAFTSMAN.NS         6 trades
+  [7/51] Backtesting CUMMINSIND.NS        2 trades
+  [8/51] Backtesting THERMAX.NS           2 trades
+  [9/51] Backtesting ELGIEQUIP.NS         3 trades
+  [10/51] Backtesting CARBORUNIV.NS        0 trades
+  [11/51] Backtesting RKFORGE.NS           3 trades
+  [12/51] Backtesting CIEINDIA.NS          1 trades
+  [13/51] Backtesting ENDURANCE.NS         1 trades
+  [14/51] Backtesting GRINDWELL.NS         4 trades
+  [15/51] Backtesting UNOMINDA.NS          7 trades
+  [16/51] Backtesting TATACOMM.NS          8 trades
+  [17/51] Backtesting STLTECH.NS           1 trades
+  [18/51] Backtesting HFCL.NS              1 trades
+  [19/51] Backtesting INDUSTOWER.NS        2 trades
+  [20/51] Backtesting CDSL.NS              10 trades
+  [21/51] Backtesting BSE.NS               0 trades
+  [22/51] Backtesting ROUTE.NS             3 trades
+  [23/51] Backtesting TANLA.NS             10 trades
+  [24/51] Backtesting COFORGE.NS           10 trades
+  [25/51] Backtesting PERSISTENT.NS        8 trades
+  [26/51] Backtesting MPHASIS.NS           5 trades
+  [27/51] Backtesting KPITTECH.NS          12 trades
+  [28/51] Backtesting RAILTEL.NS           6 trades
+  [29/51] Backtesting ABB.NS               0 trades
+  [30/51] Backtesting SIEMENS.NS           3 trades
+  [31/51] Backtesting HAVELLS.NS           1 trades
+  [32/51] Backtesting POLYCAB.NS           1 trades
+  [33/51] Backtesting POWERGRID.NS         3 trades
+  [34/51] Backtesting TATAPOWER.NS         2 trades
+  [35/51] Backtesting TORNTPOWER.NS        2 trades
+  [36/51] Backtesting NTPC.NS              2 trades
+  [37/51] Backtesting ADANIGREEN.NS        4 trades
+  [38/51] Backtesting SUZLON.NS            4 trades
+  [39/51] Backtesting BLUESTARCO.NS        6 trades
+  [40/51] Backtesting VOLTAS.NS            2 trades
+  [41/51] Backtesting AMBER.NS             0 trades
+  [42/51] Backtesting EXIDEIND.NS          5 trades
+  [43/51] Backtesting AMARAJABAT.NS        7 trades
+  [44/51] Backtesting TEJASNET.NS          2 trades
+  [45/51] Backtesting ITI.NS               4 trades
+  [46/51] Backtesting VINDHYATEL.NS        2 trades
+  [47/51] Backtesting GTLINFRA.NS          5 trades
+  [48/51] Backtesting NELCO.NS             8 trades
+  [49/51] Backtesting ROSSARI.NS           3 trades
+  [50/51] Backtesting SHAKTIPUMP.NS        1 trades
+  [51/51] Backtesting POCL.NS              [SKIP POCL.NS] 1 day(s) with >40% close jump (likely unadjusted split/bonus or bad data) 0 trades
+
+======================================================================
+  COMPARISON REPORT
+======================================================================
+  Metric                 v3 (ATR+trail)    v2 (original)      Delta
+  -----------------------------------------------------------------
+  trades                            367              185       +182
+  wins                              161              101           
+  losses                            206               84           
+  win_rate                         43.9             54.6     -10.70
+  avg_win                         10.94             9.83      +1.11
+  avg_loss                        -2.96            -3.24      +0.28
+  expectancy                       3.14              3.9      -0.76
+  profit_factor                    2.89             3.65      -0.76
+  max_drawdown                   -34.51           -40.05      +5.54
+
+======================================================================
+  BY PATTERN — v3 vs v2
+======================================================================
+                      pattern trades_v3 win_rate_v3 avg_pnl_v3  trades_v2 win_rate_v2 avg_pnl_v2
+Channel Breakout (Descending)         -           -          -          1      100.0%      8.51%
+                 Cup & Handle     126.0       39.7%      4.38%         59       49.2%      4.42%
+             Descending Wedge      27.0       48.1%      6.87%         15       40.0%      3.73%
+                Double Bottom      77.0       33.8%      1.92%          4       50.0%      5.14%
+                     Re-entry      74.0       54.1%      0.63%         41       61.0%      0.96%
+                 S&R Breakout      29.0       41.4%      1.56%         30       36.7%      1.46%
+                  S&R Support      33.0       60.6%      5.49%         34       76.5%      8.29%
+         Symmetrical Triangle       1.0        0.0%     -6.54%          1      100.0%      9.49%
+
+======================================================================
+  V3 EXIT REASONS
+======================================================================
+  exit_reason  trades avg_pnl
+  End of Data      16   3.14%
+    Stop Loss     153  -3.75%
+     Target 1      80   8.74%
+     Target 2      55  11.52%
+    Time Exit      33  10.37%
+Trailing Stop      30   0.00%
+
+  CSVs saved: results/backtest_v3.csv, results/backtest_v2.csv
+======================================================================
+

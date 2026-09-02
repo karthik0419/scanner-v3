@@ -1,0 +1,103 @@
+HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: REC.NS"}}}
+$REC.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['REC.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: NARAYANA.NS"}}}
+$NARAYANA.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['NARAYANA.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+======================================================================
+  SWING SCANNER  v3  — PRODUCTION
+  Full NSE EQ Universe | 2026-07-29
+  SL mode: atr | Price filter: 100.0-400.0 | Direction: BULLISH
+======================================================================
+  REGIME: RISK_OFF | Nifty 24203 vs 200DMA 24787 (-2.4%)
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !! Nifty BELOW 200DMA — long setups historically lose money
+  !! in this regime (2025 backtest: -0.35%/trade).
+  !! Reduce position size or trade the --bearish scan instead.
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+[1/4] Loading NSE EQ universe...
+  Custom list: nifty200.txt (178 stocks)
+  Universe: 178 stocks
+
+  Sector Rotation Heatmap:
+
+  SECTOR ROTATION HEATMAP
+  Sector                5D     20D  Signal
+  ------------------------------------------------
+  IT                +9.39%  +21.20%  [+] BOOM
+  Auto              +3.78%   +5.34%  [+] BOOM
+  Media             +3.21%   +3.20%  [+] BOOM
+  FMCG              +1.73%   +0.19%  [>] RISING
+  Pharma            +1.62%   +3.92%  [>] RISING
+  MidCap            +1.02%   +1.98%  [>] RISING
+  Banking           -0.24%   -1.80%  [-] WEAK
+  Financial Services  -0.24%   -1.80%  [-] WEAK
+  Infra             -0.67%   -2.03%  [-] WEAK
+  Metals            -0.82%   -4.02%  [-] WEAK
+  PSU Bank          -1.82%   -4.70%  [-] WEAK
+  Realty            -2.29%  +12.78%  [<] COOLING
+  Energy            -2.99%   -6.17%  [-] WEAK
+
+
+[2/4] Pre-fetching price data...
+  Pre-fetching price data (4 workers)...
+    100/178 fetched...
+  Ready: 174 stocks
+  Price filter (100.0-400.0): 32/174 stocks passed
+
+[3/4] Scanning 32 stocks...
+
+  ITC.NS               FOUND | Descending Wedge [Daily] | BREAKOUT | score=45.2 | rr=1.65 | SL=265.34
+  ONGC.NS              FOUND | S&R Support [Daily] | NEAR | score=32.9 | rr=1.46 | SL=223.84
+  NTPC.NS              FOUND | Descending Wedge [Daily] | NEAR | score=19.3 | rr=0.98 | SL=332.13
+  KOTAKBANK.NS         FOUND | Cup & Handle [Daily] | NEAR | score=37.4 | rr=2.2 | SL=361.032
+  TATAMOTORS.NS        FOUND | Descending Wedge [Daily] | NEAR | score=35.5 | rr=1.03 | SL=299.21
+  TATASTEEL.NS         FOUND | Descending Wedge [Daily] | NEAR | score=29.0 | rr=1.38 | SL=171.66
+  BPCL.NS              FOUND | Cup & Handle [Weekly] | NEAR | score=58.0 | rr=3.98 | SL=306.19
+  VEDL.NS              FOUND | Descending Wedge [Daily] | BREAKOUT | score=48.3 | rr=9.46 | SL=244.55
+  BANKBARODA.NS        FOUND | Descending Wedge [Daily] | WATCH | score=31.6 | rr=5.28 | SL=231.63
+  CANBK.NS             FOUND | Descending Wedge [Daily] | WATCH | score=19.3 | rr=1.78 | SL=117.83
+  GAIL.NS              FOUND | Cup & Handle [Weekly] | NEAR | score=58.0 | rr=3.43 | SL=163.9246
+  PNB.NS               FOUND | Double Bottom [Daily] | NEAR | score=65.8 | rr=16.23 | SL=110.88
+  SAIL.NS              FOUND | Descending Wedge [Daily] | BREAKOUT | score=44.5 | rr=17.97 | SL=152.582
+  RECLTD.NS            FOUND | Cup & Handle [Weekly] | NEAR | score=58.0 | rr=4.72 | SL=356.84
+  TATAPOWER.NS         FOUND | Descending Wedge [Daily] | NEAR | score=38.7 | rr=2.35 | SL=358.55
+  ZOMATO.NS            FOUND | Cup & Handle [Monthly] | NEAR | score=60.6 | rr=12.76 | SL=302.11
+  ANGELONE.NS          FOUND | S&R Breakout [Daily] | NEAR | score=23.2 | rr=0.13 | SL=284.47
+  SCI.NS               FOUND | Double Bottom [Daily] | NEAR | score=61.3 | rr=1.92 | SL=262.84
+  FEDERALBNK.NS        FOUND | Cup & Handle [Monthly] | NEAR | score=59.3 | rr=4.34 | SL=343.79
+  RBLBANK.NS           FOUND | Cup & Handle [Monthly] | NEAR | score=54.1 | rr=53.77 | SL=362.72
+  MANAPPURAM.NS        FOUND | Cup & Handle [Monthly] | NEAR | score=59.3 | rr=4.7 | SL=343.51
+
+[4/4] Saving results...
+  Extended list  : F:\projects\claude\scanner-v3\results\v3_2026-07-29_all.csv  (21 stocks)
+
+======================================================================
+  SCAN COMPLETE — 2026-07-29
+  Setups found : 11
+  Top score    : 65.8 (PNB.NS)
+======================================================================
+
+  TOP 11 SETUPS
+  Symbol               Pattern                      TF       Score    RR     T1%    SL% Status
+  -----------------------------------------------------------------------------------------------
+  PNB.NS               Double Bottom                Daily     65.8 16.23   11.2%  0.69%  NEAR
+  SCI.NS               Double Bottom                Daily     61.3  1.92  15.14%   6.3%  NEAR
+  ZOMATO.NS            Cup & Handle                 Monthly   60.6 12.76  25.83%  2.02%  NEAR
+  MANAPPURAM.NS        Cup & Handle                 Monthly   59.3   4.7  25.24%  5.37%  NEAR
+  FEDERALBNK.NS        Cup & Handle                 Monthly   59.3  4.34  18.03%  4.16%  NEAR
+  BPCL.NS              Cup & Handle                 Weekly    58.0  3.98  19.42%  4.88%  NEAR
+  GAIL.NS              Cup & Handle                 Weekly    58.0  3.43  31.62%  7.38%  NEAR
+  RECLTD.NS            Cup & Handle                 Weekly    58.0  4.72  19.34%   4.1%  NEAR
+  RBLBANK.NS           Cup & Handle                 Monthly   54.1 53.77  32.12%   0.6%  NEAR
+  VEDL.NS              Descending Wedge             Daily     48.3  9.46  32.28%  3.41%  BREAKOUT
+  SAIL.NS              Descending Wedge             Daily     44.5 17.97  18.74%  1.04%  BREAKOUT
+
+  Saved: F:\projects\claude\scanner-v3\results\v3_2026-07-29.csv
+======================================================================
+

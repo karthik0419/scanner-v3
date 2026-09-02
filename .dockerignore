@@ -1,0 +1,8 @@
+# Scanner-v3 dockerignore — exclude generated/large files from Docker build context
+cache/
+results/
+__pycache__/
+*.pyc
+.git/
+.env
+*.txt.bak

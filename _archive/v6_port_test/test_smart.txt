@@ -1,0 +1,200 @@
+HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: REC.NS"}}}
+$REC.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['REC.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: NARAYANA.NS"}}}
+$NARAYANA.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['NARAYANA.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+$HEXAWARE.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['HEXAWARE.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+$ZENSAR.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['ZENSAR.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+$NIIT.NS: possibly delisted; no price data found  (period=3y)
+
+1 Failed download:
+['NIIT.NS']: possibly delisted; no price data found  (period=3y)
+$KENNAMETAL.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['KENNAMETAL.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+$DRONEACHARYA.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['DRONEACHARYA.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+$AMIT.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['AMIT.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+$CAPRIGINS.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['CAPRIGINS.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+$MTAR.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['MTAR.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+$PRAJ.NS: possibly delisted; no price data found  (period=3y)
+
+1 Failed download:
+['PRAJ.NS']: possibly delisted; no price data found  (period=3y)
+$PRATAAP.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['PRATAAP.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+$RADHAKRISHN.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['RADHAKRISHN.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+$MAZAGON.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['MAZAGON.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+$DCX.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['DCX.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+$BATA.NS: possibly delisted; no price data found  (period=3y)
+
+1 Failed download:
+['BATA.NS']: possibly delisted; no price data found  (period=3y)
+$TILAKNAGAR.NS: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['TILAKNAGAR.NS']: possibly delisted; no price data found  (period=3y) (Yahoo error = "No data found, symbol may be delisted")
+======================================================================
+  SWING SCANNER  v3  — PRODUCTION
+  Full NSE EQ Universe | 2026-07-30
+  SL mode: atr | Price filter: 100.0-400.0 | Direction: BULLISH
+======================================================================
+  REGIME: RISK_OFF | Nifty 23985 vs 200DMA 24790 (-3.2%)
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !! Nifty BELOW 200DMA — long setups historically lose money
+  !! in this regime (2025 backtest: -0.35%/trade).
+  !! Reduce position size or trade the --bearish scan instead.
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+[1/4] Loading NSE EQ universe...
+  Hot sectors today: 
+  Hot sector stocks: 0
+  Smart universe: 51 backbone + 497 nifty500 + 0 hot sector = 384 stocks
+  Universe: 384 stocks
+
+  Sector Rotation Heatmap:
+
+  SECTOR ROTATION HEATMAP
+  Sector                5D     20D  Signal
+  ------------------------------------------------
+  IT                +4.95%  +15.66%  [+] BOOM
+  Media             +2.50%   +0.50%  [>] RISING
+  Auto              +0.89%   +1.32%  [>] RISING
+  Energy            +0.09%   -2.92%  [-] WEAK
+  Pharma            -0.36%   +2.66%  [<] COOLING
+  Infra             -0.55%   -1.29%  [-] WEAK
+  MidCap            -0.65%   +2.15%  [<] COOLING
+  PSU Bank          -0.83%   -4.43%  [-] WEAK
+  FMCG              -1.14%   -1.82%  [-] WEAK
+  Banking           -1.87%   -1.37%  [-] WEAK
+  Financial Services  -1.87%   -1.37%  [-] WEAK
+  Metals            -1.99%   -4.41%  [-] WEAK
+  Realty            -2.12%  +12.01%  [<] COOLING
+
+
+[2/4] Pre-fetching price data...
+  Pre-fetching price data (4 workers)...
+    100/384 fetched...
+    200/384 fetched...
+    300/384 fetched...
+  Ready: 367 stocks
+  Price filter (100.0-400.0): 75/367 stocks passed
+
+[3/4] Scanning 75 stocks...
+
+  RAILTEL.NS           FOUND | Cup & Handle [Daily] | NEAR | score=63.2 | rr=3.32 | SL=273.714
+  TATAPOWER.NS         FOUND | Double Bottom [Daily] | NEAR | score=65.8 | rr=4.79 | SL=371.07
+  NTPC.NS              FOUND | Descending Wedge [Daily] | BREAKOUT | score=37.4 | rr=1.05 | SL=331.78
+  ITC.NS               FOUND | Descending Wedge [Daily] | BREAKOUT | score=32.2 | rr=1.69 | SL=264.91
+  KOTAKBANK.NS         FOUND | Cup & Handle [Daily] | NEAR | score=31.6 | rr=1.69 | SL=361.032
+  ONGC.NS              FOUND | S&R Support [Daily] | NEAR | score=32.9 | rr=1.58 | SL=224.49
+  TATAMOTORS.NS        FOUND | Descending Wedge [Daily] | BREAKOUT | score=48.4 | rr=2.28 | SL=303.71
+  TATASTEEL.NS         FOUND | Descending Wedge [Daily] | BREAKOUT | score=48.3 | rr=4.86 | SL=175.89
+  BPCL.NS              FOUND | Cup & Handle [Weekly] | NEAR | score=41.9 | rr=1.1 | SL=293.412
+  VEDL.NS              FOUND | Descending Wedge [Daily] | BREAKOUT | score=44.5 | rr=11.4 | SL=243.61
+  BANKBARODA.NS        FOUND | Descending Wedge [Daily] | WATCH | score=29.0 | rr=2.9 | SL=231.21
+  CANBK.NS             FOUND | Descending Wedge [Daily] | WATCH | score=35.4 | rr=6.26 | SL=120.52
+  GAIL.NS              FOUND | Cup & Handle [Weekly] | NEAR | score=58.0 | rr=3.43 | SL=163.9246
+  PNB.NS               FOUND | Double Bottom [Daily] | NEAR | score=40.0 | rr=0.74 | SL=102.19
+  RECLTD.NS            FOUND | Cup & Handle [Weekly] | NEAR | score=58.0 | rr=4.63 | SL=363.15
+  SAIL.NS              FOUND | Descending Wedge [Daily] | BREAKOUT | score=44.5 | rr=3.66 | SL=157.28320000000002
+  ZOMATO.NS            FOUND | Cup & Handle [Monthly] | NEAR | score=60.6 | rr=8.58 | SL=302.92
+  SCI.NS               FOUND | Double Bottom [Daily] | NEAR | score=61.3 | rr=1.95 | SL=263.09
+  FEDERALBNK.NS        FOUND | Cup & Handle [Monthly] | NEAR | score=59.3 | rr=4.45 | SL=345.38
+  RBLBANK.NS           FOUND | Cup & Handle [Monthly] | NEAR | score=54.1 | rr=12.84 | SL=362.51
+  MANAPPURAM.NS        FOUND | Cup & Handle [Monthly] | NEAR | score=59.3 | rr=4.55 | SL=352.03
+  GMRAIRPORT.NS        FOUND | Cup & Handle [Monthly] | WATCH | score=36.1 | rr=1.74 | SL=98.53
+  TRIVENI.NS           FOUND | S&R Breakout [Daily] | NEAR | score=23.2 | rr=0.11 | SL=215.142
+  VGUARD.NS            FOUND | Descending Wedge [Daily] | NEAR | score=23.8 | rr=1.89 | SL=287.16
+  NATIONALUM.NS        FOUND | Symmetrical Triangle [Daily] | NEAR | score=38.7 | rr=4.94 | SL=331.29
+  WELSPUNIND.NS        FOUND | Cup & Handle [Monthly] | WATCH | score=52.3 | rr=3.12 | SL=149.32
+  JAINREC.NS           FOUND | Descending Wedge [Daily] | NEAR | score=19.3 | rr=0.77 | SL=313.68
+  AFCONS.NS            FOUND | Double Bottom [Daily] | WATCH | score=31.6 | rr=0.79 | SL=260.13
+  ABCAPITAL.NS         FOUND | Cup & Handle [Monthly] | NEAR | score=54.1 | rr=20.22 | SL=391.47
+  CASTROLIND.NS        FOUND | Cup & Handle [Weekly] | NEAR | score=52.9 | rr=4.26 | SL=179.242
+  DEVYANI.NS           FOUND | Cup & Handle [Daily] | NEAR | score=67.1 | rr=19.23 | SL=116.84
+  GICRE.NS             FOUND | Symmetrical Triangle [Daily] | NEAR | score=36.1 | rr=2.99 | SL=348.98
+  HINDPETRO.NS         FOUND | Cup & Handle [Weekly] | NEAR | score=52.9 | rr=3.22 | SL=364.609
+  IGL.NS               FOUND | Descending Wedge [Daily] | BREAKOUT | score=48.3 | rr=11.2 | SL=142.91
+  KANSAINER.NS         FOUND | Cup & Handle [Weekly] | NEAR | score=55.5 | rr=4.1 | SL=187.24859999999998
+  LXCHEM.NS            FOUND | Cup & Handle [Daily] | NEAR | score=56.1 | rr=1.78 | SL=185.1
+  PATANJALI.NS         FOUND | S&R Breakout [Daily] | NEAR | score=36.1 | rr=0.27 | SL=330.48
+  SAPPHIRE.NS          FOUND | Cup & Handle [Weekly] | NEAR | score=59.4 | rr=7.03 | SL=183.98
+  WELSPUNLIV.NS        FOUND | Cup & Handle [Monthly] | WATCH | score=52.3 | rr=3.12 | SL=149.32
+  AVANTEL.NS           FOUND | Double Bottom [Daily] | NEAR | score=61.3 | rr=1.57 | SL=150.95
+  GOCOLORS.NS          FOUND | Double Bottom [Daily] | BREAKOUT | score=69.7 | rr=1.57 | SL=297.16
+  GPPL.NS              FOUND | Breakout Retest [Daily] | RETEST | score=14.1 | rr=1.44 | SL=143.66799999999998
+  LATENTVIEW.NS        FOUND | Cup & Handle [Daily] | NEAR | score=67.1 | rr=4.17 | SL=301.6
+  NAZARA.NS            FOUND | Cup & Handle [Weekly] | NEAR | score=65.9 | rr=3.78 | SL=287.63
+  NYKAA.NS             FOUND | Cup & Handle [Monthly] | NEAR | score=60.6 | rr=11.69 | SL=321.27
+  SPANDANA.NS          FOUND | Double Bottom [Daily] | BREAKOUT | score=63.8 | rr=2.15 | SL=245.31799999999998
+  SURYODAY.NS          FOUND | Double Bottom [Daily] | BREAKOUT | score=63.2 | rr=1.52 | SL=149.34
+  MOTHERSON.NS         FOUND | Cup & Handle [Monthly] | WATCH | score=39.3 | rr=2.54 | SL=134.32
+
+[4/4] Saving results...
+  Extended list  : F:\projects\claude\scanner-v3\results\v3_2026-07-30_all.csv  (48 stocks)
+
+======================================================================
+  SCAN COMPLETE — 2026-07-30
+  Setups found : 29
+  Top score    : 69.7 (GOCOLORS.NS)
+======================================================================
+
+  TOP 10 SETUPS
+  Symbol               Pattern                      TF       Score    RR     T1%    SL% Status
+  -----------------------------------------------------------------------------------------------
+  GOCOLORS.NS          Double Bottom                Daily     69.7  1.57  12.69%  6.45%  BREAKOUT
+  DEVYANI.NS           Cup & Handle                 Daily     67.1 19.23   24.7%  1.28%  NEAR
+  LATENTVIEW.NS        Cup & Handle                 Daily     67.1  4.17  21.03%  5.04%  NEAR
+  NAZARA.NS            Cup & Handle                 Weekly    65.9  3.78  19.92%  5.28%  NEAR
+  TATAPOWER.NS         Double Bottom                Daily     65.8  4.79   7.85%  1.64%  NEAR
+  SPANDANA.NS          Double Bottom                Daily     63.8  2.15   5.69%  2.65%  BREAKOUT
+  RAILTEL.NS           Cup & Handle                 Daily     63.2  3.32  28.01%  6.74%  NEAR
+  SURYODAY.NS          Double Bottom                Daily     63.2  1.52  14.26%  7.52%  BREAKOUT
+  AVANTEL.NS           Double Bottom                Daily     61.3  1.57   14.0%  7.14%  NEAR
+  SCI.NS               Double Bottom                Daily     61.3  1.95  15.14%  6.21%  NEAR
+
+  Saved: F:\projects\claude\scanner-v3\results\v3_2026-07-30.csv
+======================================================================
+
+[Paper Tracker] Syncing...
+[SYNC] Tracker updated from v3_2026-07-30.csv
+  New picks added:    9
+  Existing updated:   1
+  Kept as-is:         10
+  Total in tracker:   20
+

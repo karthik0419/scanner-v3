@@ -1,0 +1,22 @@
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+Updated 20 open trades.
+  Tracker: F:\projects\claude\scanner-v3\results\paper_tracker.csv
+
+Run 'python paper_tracker.py status' to see results.

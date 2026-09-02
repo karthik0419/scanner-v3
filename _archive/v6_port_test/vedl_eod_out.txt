@@ -1,0 +1,8 @@
+VEDL LIVE TRADE — EOD 29 Jul 2026
+Entry: Rs. 263.4 | SL: Rs. 245.0 | Target: Rs. 330.0 | Qty: 80
+Current: Rs. 264.5
+P&L: Rs. 88.0 ( 0.42 %)
+Distance to SL: 7.4 %  (Rs. 19.5 away)
+Distance to Target: 24.8 %  (Rs. 65.5 away)
+Max loss if SL hit: Rs. 1472.0
+Profit if target hit: Rs. 5328.0

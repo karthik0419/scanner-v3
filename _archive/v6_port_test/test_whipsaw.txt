@@ -1,0 +1,355 @@
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+=== ANALYSIS: SL exits that would have hit target ===
+Total SL exits: 1306
+
+  ...checked 200/1306
+  ...checked 400/1306
+  ...checked 600/1306
+  ...checked 800/1306
+  ...checked 1000/1306
+  ...checked 1200/1306
+
+Checked: 1306 | Skipped: 18
+Whipsaws (SL hit but T1 reached later): 251
+Whipsaw rate: 19.2% of SL exits
+
+--- WHIPSAW SUMMARY ---
+  Total whipsaws:        251
+  Also hit T2:           147
+  Went lower before T1:  208
+  Avg days to T1:        20.5
+  Avg SL loss:           -3.47%
+  Avg P&L if held to T1: +7.50%
+  Avg further drop:      -4.76% below SL
+
+--- WHIPSAWS BY PATTERN ---
+  Ascending Triangle          1 whipsaws | SL: -1.03% | if held: +7.41% | days: 16 | went lower: 100%
+  Cup & Handle               17 whipsaws | SL: -2.82% | if held: +16.78% | days: 31 | went lower: 59%
+  Descending Wedge           29 whipsaws | SL: -4.33% | if held: +10.92% | days: 27 | went lower: 76%
+  Double Bottom              39 whipsaws | SL: -3.99% | if held: +11.72% | days: 27 | went lower: 90%
+  Re-entry                   79 whipsaws | SL: -2.98% | if held: +2.96% | days: 14 | went lower: 89%
+  S&R Breakout               39 whipsaws | SL: -2.79% | if held: +6.14% | days: 17 | went lower: 79%
+  S&R Support                47 whipsaws | SL: -4.16% | if held: +7.30% | days: 21 | went lower: 83%
+
+--- TOP 20 WORST WHIPSAWS (biggest missed opportunity) ---
+  Symbol             Pattern                    SL%  If held%  Missed%  Days  Lower?
+  BHARATFORG.NS      Cup & Handle            -0.51%   +34.70%  +35.21%    35       Y
+  BHARATFORG.NS      Cup & Handle            -4.22%   +29.13%  +33.35%    36       Y
+  TANLA.NS           Descending Wedge        -5.77%   +24.52%  +30.29%    36       N
+  BEL.NS             Double Bottom           -8.32%   +19.96%  +28.28%    44       Y
+  BEL.NS             Cup & Handle            -6.43%   +20.82%  +27.25%    38       N
+  THERMAX.NS         Cup & Handle            -1.61%   +23.78%  +25.39%    29       N
+  NELCO.NS           Double Bottom           -9.64%   +13.74%  +23.38%    34       Y
+  HCLTECH.NS         Double Bottom           -6.82%   +16.38%  +23.20%    28       Y
+  ADANIPORTS.NS      Cup & Handle            -1.79%   +21.19%  +22.98%    42       Y
+  BANDHANBNK.NS      Cup & Handle            -2.87%   +19.61%  +22.48%    44       Y
+  SUZLON.NS          Double Bottom           -9.00%   +12.44%  +21.44%    24       Y
+  TEJASNET.NS        Descending Wedge        -7.17%   +13.44%  +20.61%    35       Y
+  HFCL.NS            Cup & Handle            -0.79%   +19.54%  +20.33%    25       Y
+  BEL.NS             Double Bottom           -1.52%   +18.18%  +19.70%    21       Y
+  RAILTEL.NS         Double Bottom           -2.97%   +16.57%  +19.54%    10       Y
+  NELCO.NS           S&R Support             -4.96%   +14.57%  +19.53%    19       Y
+  LICHSGFIN.NS       Double Bottom           -7.81%   +11.47%  +19.28%    44       Y
+  VINDHYATEL.NS      Double Bottom           -5.58%   +13.65%  +19.23%    19       Y
+  BAJAJHLDNG.NS      Cup & Handle            -4.33%   +14.14%  +18.47%    48       Y
+  MOTILALOFS.NS      S&R Support             -5.98%   +12.34%  +18.32%    17       Y
+
+--- WENT LOWER BEFORE RECOVERING ---
+  208/251 whipsaws went below SL before recovering to T1
+  Avg additional drop below SL: -6.20%
+  This means a 1.5x ATR stop would NOT have saved these — they needed to be wider
+
+  Full results saved: results/whipsaw_analysis.csv

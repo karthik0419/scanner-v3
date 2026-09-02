@@ -1,0 +1,5 @@
+[SYNC] Tracker updated from v3_2026-07-29.csv
+  New picks added:    0
+  Existing updated:   11
+  Kept as-is:         0
+  Total in tracker:   11

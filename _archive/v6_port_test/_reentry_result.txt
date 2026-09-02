@@ -1,0 +1,53 @@
+============================================================
+  GENESYS.NS - RE-ENTRY CHECK
+============================================================
+
+ORIGINAL TRADE (Jul 27 scan):
+  Pattern: Double Bottom BREAKOUT
+  Entry:   Rs 300.55
+  Stop:    Rs 276.51 (hit on Jul 29)
+  Result:  -8.0%% loss
+
+RE-ENTRY CONDITIONS (v3.1 rules):
+  1. Stock hit SL?              YES (Jul 29, low 272.25 < 276.51)
+  2. Recovered above breakout?  YES (today high Rs 298.75 > breakout Rs 293.09)
+  3. Within 30 days of SL?      YES (5 days since stop)
+
+RE-ENTRY TRADE LEVELS:
+  Re-entry price: Rs 298.75 (today close)
+  New stop:       Rs 287.23 (2% below breakout 293.09)
+  Stop risk:      3.86%
+  Target 1:       Rs 350.11 (+17.19%)
+  Target 2:       Rs 388.13 (+29.92%)
+  R:R to T1:      1:4.46
+  R:R to T2:      1:7.76
+
+VOLUME CHECK:
+  Today volume:  511803
+  20-day avg:    275239
+  Ratio:         1.86x (STRONG)
+
+ATR(14): Rs 16.07 (5.38% of price)
+
+RISK ASSESSMENT:
+  Original loss: -8.0% (Rs 24.04/share)
+  Re-entry risk: -3.86% (Rs 11.52/share)
+  Re-entry is TIGHTER (3.86% vs 8.0%)
+
+============================================================
+  VERDICT: RE-ENTRY APPROVED
+============================================================
+
+  All 3 conditions met:
+  1. Stopped out Jul 29
+  2. Today high Rs 298.75 > breakout Rs 293.09
+  3. 5 days since stop (within 30-day window)
+
+  RECOMMENDED TRADE:
+    Enter: Rs 298.75 (today close or tomorrow open)
+    Stop:  Rs 287.23 (tight 2% stop)
+    T1:    Rs 350.11 (+17.2%)
+    T2:    Rs 388.13 (+29.9%)
+    R:R:   1:4.46 to T1
+
+  Volume today: 1.86x avg (STRONG confirmation)

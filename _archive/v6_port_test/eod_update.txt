@@ -1,0 +1,29 @@
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+C:\Users\91814\AppData\Local\Programs\Python\Python312\Lib\site-packages\jugaad_data\util.py:38: UserWarning: no explicit representation of timezones available for np.datetime64
+  return np.datetime64(dt)
+  [BREAKOUT] MANAPPURAM.NS broke out to 370.15 >= 363.00 — entered
+  [BREAKOUT] FEDERALBNK.NS broke out to 359.15 >= 358.70 — entered
+  [BREAKOUT] RECLTD.NS broke out to 374.25 >= 372.10 — entered
+Updated 11 open trades.
+  Tracker: F:\projects\claude\scanner-v3\results\paper_tracker.csv
+
+Run 'python paper_tracker.py status' to see results.

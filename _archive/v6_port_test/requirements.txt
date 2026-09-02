@@ -1,0 +1,18 @@
+# Scanner v3 — dependencies
+# Core
+pandas>=2.0
+numpy>=1.24
+yfinance>=0.2.30
+
+# NSE data (primary source)
+jugaad-data>=0.14
+
+# Charts (optional but recommended)
+matplotlib>=3.7
+mplfinance>=0.12.9b
+
+# Telegram notifications (optional)
+requests>=2.31
+
+# Verification / backtesting
+python-dateutil>=2.8

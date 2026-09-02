@@ -1,0 +1,70 @@
+﻿
+============================================================
+≡ƒöì NSE MARKET SENTIMENT ANALYSIS
+≡ƒôà Date: 2026-08-27 19:25
+============================================================
+
+============================================================
+≡ƒôè NIFTY 50 INDEX ANALYSIS
+============================================================
+
+≡ƒôê Current Level: 24,090.85
+≡ƒôè 50-day SMA: 24,208.04 (-0.48%)
+≡ƒôè 200-day SMA: 24,662.01 (-2.32%)
+
+≡ƒÄ» Trend: BEARISH ≡ƒö┤
+
+≡ƒôà Returns:
+  1 Week:  -0.66%
+  1 Month: -1.20%
+  3 Month: +2.88%
+  6 Month: -1.59%
+
+≡ƒôë Volatility (20-day): 0.51%
+
+≡ƒÄ▓ Market Regime: STRONG DOWNTREND ≡ƒôë
+
+============================================================
+≡ƒÅ¡ SECTOR ROTATION ANALYSIS
+============================================================
+Γ¥î Error analyzing sectors: 'short'
+
+============================================================
+ΓÜí MOMENTUM ANALYSIS
+============================================================
+
+≡ƒôè Nifty 50 Momentum Sample (10 stocks):
+  Strong momentum (>5% in 1M): 0 (0.0%)
+  Weak momentum (<-5% in 1M): 0 (0.0%)
+  Neutral: 10
+
+ΓÜí Momentum Environment: CHOPPY/MIXED πÇ░∩╕Å
+
+============================================================
+≡ƒÆí TRADING RECOMMENDATIONS
+============================================================
+
+≡ƒÄ» Market Condition: SIDEWAYS & QUIET
+≡ƒôï Recommendation: πÇ░∩╕Å  SELECTIVE MODE
+
+≡ƒô¥ Action Items:
+   ΓÇó Be very selective
+   ΓÇó Focus on individual stock setups
+   ΓÇó Avoid chasing breakouts
+   ΓÇó Consider range-bound strategies
+   ΓÇó Wait for clear trends to emerge
+
+Γ¥ô WHY IS MOMENTUM WEAK?
+   ΓÇó Market in downtrend (Nifty down in last month)
+
+ΓÅ░ WHAT TO DO NOW?
+   ΓÇó Wait for confirmation of trend reversal
+   ΓÇó Focus on quality over quantity
+   ΓÇó Use scanner to find rare high-quality setups
+   ΓÇó Be patient - momentum will return
+   ΓÇó Consider paper trading to stay sharp
+
+============================================================
+Γ£à Analysis Complete!
+============================================================
+

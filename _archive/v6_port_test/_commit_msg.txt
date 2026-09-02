@@ -1,0 +1,37 @@
+v3.1: Chart learnings — pct_done/left, upside filter, flags, enhanced Telegram
+
+Applied 8 lessons from TradingView chart analysis (2026-08-06):
+
+1. pct_done / pct_left — % of measured move done and remaining, computed
+   for every pick. Shown in console output and Telegram message.
+
+2. Upside remaining filter — skip picks where CMP is within 10% of T2
+   (most of the move already done, not worth entering).
+
+3. Breakout sustained flag [S] — pick held above breakout for 10+ trading
+   days in last 20 bars. Higher follow-through probability.
+
+4. Nested cup flag [N] — multiple cup timeframes detected simultaneously
+   (daily + weekly, or weekly + monthly). Score bonus +10/155 pts.
+
+5. Double confirmation flag [D] — descending channel + S&R zone breakout
+   within 2% of each other on same stock. Score bonus +15/155 pts.
+
+6. Historical resistance note — if prior high (50-200 bars ago) is within
+   10% of T2, flagged as ~R{price} in output and Telegram.
+
+7. Target format T1 to T2 on one line — Telegram now shows
+   "Target Rs 595 -> Rs 679" instead of T1 and T2 on separate lines.
+
+8. Action clarity — "BUY NOW at Rs X" for BREAKOUT,
+   "BUY above Rs X" for NEAR picks.
+
+New CSV columns: upside_remaining, pct_done, pct_left, sustained,
+nested_cup, double_confirm, hist_resist.
+
+telegram_notify.py format_message() fully rewritten with all new fields.
+Backward compatible — uses .get() with defaults for older CSVs.
+
+Generated with [Devin](https://devin.ai)
+
+Co-Authored-By: Devin <158243242+devin-ai-integration[bot]@users.noreply.github.com>

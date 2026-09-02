@@ -1,0 +1,31 @@
+====================================================================================================
+  PAPER TRADE TRACKER — scanner-v3
+  Scan date: 2026-07-30 | Picks: 11
+====================================================================================================
+
+  OPEN: 5 | CLOSED: 0 | TRADEABLE: 9 (excludes SKIP_TIGHT + SKIP_WIDE)
+
+  Symbol             Pattern                     Entry       SL       T1      Now    P&L% Days Status     Tradeable
+  --------------------------------------------------------------------------------------------------------------
+  PNB.NS             Double Bottom              115.60   110.88   124.15   111.08  -3.91%    0 WAITING_BREAKOUT SKIP_TIGHT
+  SCI.NS             Double Bottom              280.50   262.84   322.98   278.60  -0.68%    0 WAITING_BREAKOUT TRADE_SMALL
+  ZOMATO.NS          Cup & Handle               323.60   302.11   388.00   311.80  -3.65%    0 WAITING_BREAKOUT TRADE
+  MANAPPURAM.NS      Cup & Handle               363.00   343.51   454.62   370.15  +1.97%    1 OPEN       TRADE_SMALL
+  FEDERALBNK.NS      Cup & Handle               358.70   343.79   423.37   359.15  +0.13%    1 OPEN       TRADE
+  BPCL.NS            Cup & Handle               321.90   306.19   384.42   317.40  -1.40%    0 WAITING_BREAKOUT TRADE
+  GAIL.NS            Cup & Handle               176.99   163.92   232.96   175.12  -1.06%    0 WAITING_BREAKOUT TRADE_SMALL
+  RECLTD.NS          Cup & Handle               372.10   356.84   444.07   374.25  +0.58%    1 OPEN       TRADE
+  RBLBANK.NS         Cup & Handle               382.35   362.72   482.12   371.15  -2.93%    0 WAITING_BREAKOUT SKIP_TIGHT
+  VEDL.NS            Descending Wedge           259.35   244.55   334.92   264.50  +1.99%    1 OPEN       TRADE
+  SAIL.NS            Descending Wedge           165.85   152.58   183.08   170.96  +3.08%    1 OPEN       TRADE
+
+====================================================================================================
+  OPEN TRADES — UNREALIZED P&L
+====================================================================================================
+  Open trades: 5
+  In profit: 5 | In loss: 0
+  Avg unrealized P&L: +1.55%
+  Sum unrealized P&L: +7.75%
+
+  Tracker file: F:\projects\claude\scanner-v3\results\paper_tracker.csv
+====================================================================================================

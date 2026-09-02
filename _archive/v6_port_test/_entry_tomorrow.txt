@@ -1,0 +1,38 @@
+======================================================================
+  STOCKS TO ENTER TOMORROW (broke out today)
+======================================================================
+
+These were WAITING_BREAKOUT (NEAR picks). They broke above
+their breakout level today -> ENTER TOMORROW at open.
+
+Symbol            Pattern             Breakout     Entry      Stop        T1        T2      Live  Risk%    R:R
+--------------------------------------------------------------------------------------------------------------
+ABCAPITAL.NS      Cup & Handle        Rs 411.40  Rs 411.40  Rs 392.16  Rs 521.55  Rs 631.69  Rs 424.35    4.7   5.73
+NYKAA.NS          Cup & Handle        Rs 335.00  Rs 335.00  Rs 321.19  Rs 400.35  Rs 465.70  Rs 344.90    4.1   4.73
+BPCL.NS           Cup & Handle        Rs 321.90  Rs 321.90  Rs 306.19  Rs 384.42  Rs 446.95  Rs 329.95    4.9   3.98
+AVANTEL.NS        Double Bottom       Rs 162.55  Rs 162.55  Rs 151.33  Rs 185.30  Rs 208.05  Rs 162.99    6.9   2.03
+
+======================================================================
+  NEAR BREAKOUT (watch closely, may trigger tomorrow)
+======================================================================
+
+PNB.NS            Cup & Handle        Rs 113.38  Rs 113.38  Rs 109.23  Rs 121.93  Rs 130.48  Rs 113.00    3.7   2.06  (-0.34% from breakout)
+TATAPOWER.NS      Double Bottom       Rs 385.40  Rs 385.40  Rs 371.07  Rs 406.85  Rs 428.30  Rs 382.00    3.7   1.50  (-0.88% from breakout)
+RBLBANK.NS        Cup & Handle        Rs 383.45  Rs 383.45  Rs 364.00  Rs 483.23  Rs 583.00  Rs 379.95    5.1   5.13  (-0.91% from breakout)
+CASTROLIND.NS     Cup & Handle        Rs 188.95  Rs 188.95  Rs 179.24  Rs 209.27  Rs 229.60  Rs 185.84    5.1   2.09  (-1.65% from breakout)
+
+======================================================================
+  ENTRY INSTRUCTIONS FOR TOMORROW
+======================================================================
+
+BROKE OUT TODAY (enter at open):
+  ABCAPITAL.NS -> Buy at/above Rs 411.40  |  SL: Rs 392.16  |  T1: Rs 521.55  |  T2: Rs 631.69  |  Risk: 4.7%
+  NYKAA.NS -> Buy at/above Rs 335.00  |  SL: Rs 321.19  |  T1: Rs 400.35  |  T2: Rs 465.70  |  Risk: 4.1%
+  BPCL.NS -> Buy at/above Rs 321.90  |  SL: Rs 306.19  |  T1: Rs 384.42  |  T2: Rs 446.95  |  Risk: 4.9%
+  AVANTEL.NS -> Buy at/above Rs 162.55  |  SL: Rs 151.33  |  T1: Rs 185.30  |  T2: Rs 208.05  |  Risk: 6.9%
+
+WATCH (enter only if breaks above breakout):
+  PNB.NS -> Buy if crosses Rs 113.38  |  SL: Rs 109.23  |  T1: Rs 121.93  |  T2: Rs 130.48
+  TATAPOWER.NS -> Buy if crosses Rs 385.40  |  SL: Rs 371.07  |  T1: Rs 406.85  |  T2: Rs 428.30
+  RBLBANK.NS -> Buy if crosses Rs 383.45  |  SL: Rs 364.00  |  T1: Rs 483.23  |  T2: Rs 583.00
+  CASTROLIND.NS -> Buy if crosses Rs 188.95  |  SL: Rs 179.24  |  T1: Rs 209.27  |  T2: Rs 229.60
