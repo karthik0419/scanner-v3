@@ -2,17 +2,22 @@ import yfinance as yf
 import pandas as pd
 
 # Download Nifty 50 data
-nifty = yf.download('^NSEI', period='6mo', progress=False)
+nifty = yf.download('^NSEI', period='2y', progress=False)
+
+# Flatten MultiIndex columns if present (newer yfinance returns MultiIndex
+# even for single tickers, which breaks scalar indexing downstream).
+if isinstance(nifty.columns, pd.MultiIndex):
+    nifty.columns = nifty.columns.get_level_values(0)
 
 # Calculate SMAs
 nifty['SMA50'] = nifty['Close'].rolling(50).mean()
 nifty['SMA200'] = nifty['Close'].rolling(200).mean()
 
-# Get latest values
-close = nifty['Close'].iloc[-1]
-sma50 = nifty['SMA50'].iloc[-1]
-sma200 = nifty['SMA200'].iloc[-1]
-prev_close = nifty['Close'].iloc[-5] if len(nifty) >= 5 else close
+# Get latest values (force scalar via float())
+close = float(nifty['Close'].iloc[-1])
+sma50 = float(nifty['SMA50'].iloc[-1])
+sma200 = float(nifty['SMA200'].iloc[-1])
+prev_close = float(nifty['Close'].iloc[-5]) if len(nifty) >= 5 else close
 
 print("=" * 60)
 print("NIFTY 50 MARKET REGIME CHECK")

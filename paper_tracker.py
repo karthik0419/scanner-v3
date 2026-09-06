@@ -171,10 +171,12 @@ def sync_tracker(csv_path=None):
     # Load existing tracker
     existing = pd.read_csv(TRACKER_PATH)
     
-    # Statuses that are "closed" — don't touch these
-    CLOSED = {"LOSS", "WIN_T1", "WIN_T2", "TIME_EXIT"}
+    # Statuses that are "closed" — don't touch these.
+    # Bug fix (2026-09-05): WIN_T1 moved to ACTIVE — it's still open for T2,
+    # and leaving it in CLOSED froze its P&L forever. RE_ENTERED is active.
+    CLOSED = {"LOSS", "WIN_T2", "TIME_EXIT"}
     # Statuses that are "active" — update with new scan data
-    ACTIVE = {"OPEN", "WAITING_BREAKOUT", "WATCH", "RE_ENTERED"}
+    ACTIVE = {"OPEN", "WAITING_BREAKOUT", "WATCH", "RE_ENTERED", "WIN_T1"}
     
     new_symbols = set(new_picks["symbol"])
     existing_symbols = set(existing["symbol"])
@@ -207,13 +209,18 @@ def sync_tracker(csv_path=None):
             existing.at[idx, "upside_pct"] = new_row["upside_pct"]
             existing.at[idx, "rr"] = new_row["rr"]
             existing.at[idx, "sector"] = new_row["sector"]
-            existing.at[idx, "scan_date"] = scan_date  # update scan date
+            # Bug fix (2026-09-05): do NOT reset scan_date on sync — it's the
+            # holding-period anchor. Resetting it made days_held wrong and
+            # prevented WAITING_BREAKOUT rows from ever aging out.
+            # existing.at[idx, "scan_date"] = scan_date  # REMOVED
             # If was WAITING_BREAKOUT and new scan says BREAKOUT → enter it
             if row["current_status"] == "WAITING_BREAKOUT" and new_row["status_at_scan"] == "BREAKOUT":
                 existing.at[idx, "current_status"] = "OPEN"
-                existing.at[idx, "entry_price"] = new_row["cmp_at_scan"]
+                # Bug fix: enter at breakout_level, not cmp_at_scan (which is the close,
+                # often above breakout — would understate risk and inflate P&L)
+                existing.at[idx, "entry_price"] = new_row["breakout_level"]
                 existing.at[idx, "days_held"] = 0
-                print(f"  [SYNC-BREAKOUT] {sym} now BREAKOUT in new scan — entered at {new_row['cmp_at_scan']}")
+                print(f"  [SYNC-BREAKOUT] {sym} now BREAKOUT in new scan — entered at {new_row['breakout_level']}")
             # If was WATCH and new scan says NEAR → upgrade to WAITING_BREAKOUT
             elif row["current_status"] == "WATCH" and new_row["status_at_scan"] in ("NEAR", "BREAKOUT"):
                 existing.at[idx, "current_status"] = "WAITING_BREAKOUT" if new_row["status_at_scan"] == "NEAR" else "OPEN"
@@ -256,47 +263,68 @@ def update_tracker(manual_prices=None):
     from data.loader import _fetch_nse
 
     updated = 0
+    WAITING_TIMEOUT_DAYS = 30  # bug fix: expire stale WAITING_BREAKOUT picks
     for idx, row in tracker.iterrows():
-        if row["current_status"] in ("LOSS", "WIN_T1", "WIN_T2", "TIME_EXIT", "RE_ENTERED"):
+        # Bug fix (2026-09-05): WIN_T1 and RE_ENTERED are now ACTIVE, not closed.
+        # Only truly closed trades (LOSS/WIN_T2/TIME_EXIT) are skipped — except
+        # LOSS trades which may re-enter.
+        if row["current_status"] in ("WIN_T2", "TIME_EXIT"):
+            continue  # truly closed, no re-entry possible
+        if row["current_status"] == "LOSS" and row.get("exit_reason") == "Stop Loss":
             # Check if a STOPPED_OUT trade should re-enter (stock recovered above breakout)
-            if row["current_status"] == "LOSS" and row.get("exit_reason") == "Stop Loss":
-                breakout_level = float(row.get("breakout_level", 0) or 0)
-                if breakout_level > 0:
-                    sym = row["symbol"]
-                    try:
-                        df_temp = _fetch_nse(sym, days=5)
-                        if df_temp is not None and not df_temp.empty:
-                            cur_price = float(df_temp["Close"].iloc[-1])
-                            scan_dt = datetime.fromisoformat(row["scan_date"]).date()
-                            days_since_sl = (today - scan_dt).days
-                            if days_since_sl <= 30 and cur_price >= breakout_level:
-                                # Re-entry! Stock recovered above breakout after SL hit
-                                tracker.at[idx, "current_status"] = "RE_ENTERED"
-                                tracker.at[idx, "entry_price"] = round(breakout_level, 2)
-                                tracker.at[idx, "stop_loss"] = round(breakout_level * 0.98, 2)  # tight 2% stop
-                                tracker.at[idx, "current_price"] = round(cur_price, 2)
-                                tracker.at[idx, "current_pnl_pct"] = 0.0
-                                tracker.at[idx, "days_held"] = 0
-                                tracker.at[idx, "exit_price"] = None
-                                tracker.at[idx, "exit_date"] = None
-                                tracker.at[idx, "exit_reason"] = None
-                                updated += 1
-                                print(f"  [RE-ENTRY] {sym} recovered to {cur_price:.2f} >= breakout {breakout_level:.2f}")
-                    except Exception:
-                        pass
+            breakout_level = float(row.get("breakout_level", 0) or 0)
+            if breakout_level > 0:
+                sym = row["symbol"]
+                try:
+                    df_temp = _fetch_nse(sym, days=5)
+                    if df_temp is not None and not df_temp.empty:
+                        cur_price = float(df_temp["Close"].iloc[-1])
+                        # Bug fix: measure re-entry window from exit_date, not scan_date
+                        exit_dt_str = row.get("exit_date")
+                        if exit_dt_str and not pd.isna(exit_dt_str):
+                            try:
+                                exit_dt = datetime.fromisoformat(str(exit_dt_str)).date()
+                            except Exception:
+                                exit_dt = datetime.fromisoformat(row["scan_date"]).date()
+                        else:
+                            exit_dt = datetime.fromisoformat(row["scan_date"]).date()
+                        days_since_sl = (today - exit_dt).days
+                        if days_since_sl <= 30 and cur_price >= breakout_level:
+                            # Re-entry! Stock recovered above breakout after SL hit
+                            tracker.at[idx, "current_status"] = "RE_ENTERED"
+                            tracker.at[idx, "entry_price"] = round(breakout_level, 2)
+                            tracker.at[idx, "stop_loss"] = round(breakout_level * 0.98, 2)  # tight 2% stop
+                            tracker.at[idx, "current_price"] = round(cur_price, 2)
+                            tracker.at[idx, "current_pnl_pct"] = 0.0
+                            tracker.at[idx, "days_held"] = 0
+                            tracker.at[idx, "exit_price"] = None
+                            tracker.at[idx, "exit_date"] = None
+                            tracker.at[idx, "exit_reason"] = None
+                            updated += 1
+                            print(f"  [RE-ENTRY] {sym} recovered to {cur_price:.2f} >= breakout {breakout_level:.2f}")
+                except Exception:
+                    pass
             continue
 
         if row["current_status"] == "WATCH":
             continue  # not traded yet
 
         sym = row["symbol"]
+        # Bug fix (2026-09-05): fetch full OHLCV and use High/Low for stop/target
+        # checks (like the backtester does), not just Close. Using only Close
+        # missed intraday stop touches and T1 hits, causing stale P&L.
+        df = None
         if manual_prices and sym in manual_prices:
             current_price = manual_prices[sym]
+            day_high = current_price
+            day_low = current_price
         else:
             try:
                 df = _fetch_nse(sym, days=5)
                 if df is not None and not df.empty:
                     current_price = float(df["Close"].iloc[-1])
+                    day_high = float(df["High"].iloc[-1])
+                    day_low = float(df["Low"].iloc[-1])
                 else:
                     continue
             except Exception:
@@ -312,13 +340,27 @@ def update_tracker(manual_prices=None):
 
         # WAITING_BREAKOUT: check if stock has broken out → enter trade
         if row["current_status"] == "WAITING_BREAKOUT":
-            if current_price >= breakout:
+            # Bug fix (2026-09-05): expire stale WAITING_BREAKOUT picks after 30 days.
+            # Without this, 116 picks accumulated forever with days_held stuck at 0.
+            if days_held >= WAITING_TIMEOUT_DAYS:
+                tracker.at[idx, "current_status"] = "TIME_EXIT"
+                tracker.at[idx, "exit_price"] = round(current_price, 2)
+                tracker.at[idx, "exit_date"] = today.isoformat()
+                tracker.at[idx, "exit_reason"] = "Waiting Timeout (30d)"
+                tracker.at[idx, "current_price"] = round(current_price, 2)
+                tracker.at[idx, "current_pnl_pct"] = 0.0
+                tracker.at[idx, "days_held"] = days_held
+                updated += 1
+                print(f"  [WAIT-EXPIRE] {sym} waited {days_held}d without breakout — expired")
+                continue
+            # Bug fix: use day_high for breakout check (intraday touch counts)
+            if day_high >= breakout:
                 # Breakout confirmed! Enter the trade at breakout level
                 tracker.at[idx, "current_status"] = "OPEN"
                 tracker.at[idx, "entry_price"] = round(breakout, 2)
                 tracker.at[idx, "days_held"] = 0
                 entry = breakout  # update for P&L calc below
-                print(f"  [BREAKOUT] {sym} broke out to {current_price:.2f} >= {breakout:.2f} — entered")
+                print(f"  [BREAKOUT] {sym} broke out to {day_high:.2f} >= {breakout:.2f} — entered")
             else:
                 # Still waiting for breakout
                 tracker.at[idx, "current_price"] = round(current_price, 2)
@@ -328,36 +370,50 @@ def update_tracker(manual_prices=None):
 
         pnl_pct = round((current_price - entry) / entry * 100, 2)
 
-        # Determine status
+        # Bug fix (2026-09-05): trailing stop after T1.
+        # If a trade has hit T1 (WIN_T1 status), set trailing stop at entry
+        # (breakeven) to protect profits. Without this, a T1 hit followed by
+        # a reversal became a full stop loss — the #4 cause of live underperformance.
+        trailing_stop = None
+        if row["current_status"] in ("WIN_T1",):
+            trailing_stop = entry  # breakeven stop after T1
+
+        # Determine status — use High/Low for intraday stop/target checks
         status = "OPEN"
         exit_price = None
         exit_date = None
         exit_reason = None
 
-        if current_price <= stop:
-            status = "LOSS"
-            exit_price = stop
+        # 1. Stop loss (use day_low — intraday touch counts)
+        effective_stop = trailing_stop if trailing_stop else stop
+        if day_low <= effective_stop:
+            status = "LOSS" if not trailing_stop else "LOSS"
+            exit_price = effective_stop
             exit_date = today.isoformat()
-            exit_reason = "Stop Loss"
-            pnl_pct = round((stop - entry) / entry * 100, 2)
-        elif current_price >= t2:
+            exit_reason = "Trailing Stop" if trailing_stop else "Stop Loss"
+            pnl_pct = round((effective_stop - entry) / entry * 100, 2)
+        # 2. Target 2 (use day_high)
+        elif day_high >= t2:
             status = "WIN_T2"
             exit_price = t2
             exit_date = today.isoformat()
             exit_reason = "Target 2"
             pnl_pct = round((t2 - entry) / entry * 100, 2)
-        elif current_price >= t1:
+        # 3. Target 1 (use day_high) — set trailing stop, stay open for T2
+        elif day_high >= t1:
             status = "WIN_T1"
             # Don't close — T1 is partial exit in real trading, but we track
             # the full position here. Mark as "at T1" but still open for T2.
+            # Trailing stop at breakeven protects the remaining position.
             exit_price = None
             exit_date = None
             exit_reason = None
-        elif days_held >= 45:
+        # 4. Time exit
+        elif days_held >= 60:
             status = "TIME_EXIT"
             exit_price = current_price
             exit_date = today.isoformat()
-            exit_reason = "Time Exit (45d)"
+            exit_reason = "Time Exit (60d)"
 
         tracker.at[idx, "current_price"] = round(current_price, 2)
         tracker.at[idx, "current_status"] = status
@@ -398,7 +454,7 @@ def show_status():
     tradeable = tracker[tracker["tradeable"] != "SKIP_TIGHT"]
     tradeable = tradeable[tradeable["tradeable"] != "SKIP_WIDE"]
 
-    open_trades = tracker[tracker["current_status"] == "OPEN"]
+    open_trades = tracker[tracker["current_status"].isin(["OPEN", "WIN_T1", "RE_ENTERED"])]
     closed = tracker[tracker["current_status"].isin(["LOSS", "WIN_T2", "TIME_EXIT"])]
 
     print(f"\n  OPEN: {len(open_trades)} | CLOSED: {len(closed)} | "

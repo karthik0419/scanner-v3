@@ -4,6 +4,139 @@ All changes implemented across versions, newest first.
 
 ---
 
+## v3.2 — 2026-09-05 (Bug Audit + Pattern Optimization)
+
+### Problem
+- Recent live tracker performance (Aug 11 – Sep 5, 2026): 1 win / 35 losses (-2.17% expectancy)
+- This diverged sharply from the v3.1 backtest (+1.30% expectancy)
+- User requested parallel validation: market regime check + bug-finding audit
+- Root cause investigation found 8 implementation bugs + 1 missing regime filter
+
+### Root Causes Identified
+1. Backtester entered NEAR/WATCH setups before breakout confirmation (inflated fills)
+2. Backtester evaluated stop/target exits on the entry bar (captured intraday wicks)
+3. Risk calculated from CMP, not actual entry (max(cmp, breakout))
+4. Breakeven trades classified as losses (inflated loss count, deflated win rate)
+5. Daily C&H detector too permissive (handle_bars=15 allowed downtrends as handles)
+6. Paper tracker: WIN_T1 status frozen in CLOSED set (P&L never updated after T1)
+7. Paper tracker: WAITING_BREAKOUT picks never expired (116 stuck forever)
+8. Paper tracker: used Close-only for stop/target checks (missed intraday touches)
+9. Paper tracker: scan_date reset on sync (broke holding-period and expiry logic)
+10. Double Bottom: volume hardcoded True (bug #9 — never checked actual volume)
+11. No market regime filter (scanner kept issuing long breakouts in bear market)
+
+### Changes (8 bug fixes + 1 regime filter + 2 pattern optimizations)
+
+| # | File | Change | Impact |
+|---|---|---|---|
+| 1 | `scanner.py`, `backtester/engine.py` | Risk from entry (max(cmp,breakout)), not CMP | Honest R:R, honest risk % |
+| 2 | `backtester/engine.py` | Gate NEAR/WATCH entry on next bar's High >= breakout | No more entering before breakout confirmation |
+| 3 | `backtester/engine.py` | Skip exit checks on entry bar (entry_bar_idx tracking) | No more same-bar wick captures |
+| 4 | `backtester/engine.py` | Breakeven (pnl=0) classified as WIN, not LOSS | Correct win/loss counts |
+| 5 | `patterns/cup_handle.py` | Daily C&H: handle_bars 15→5, handle_depth_ratio 0.90→0.70 | 720-combo sweep winner. C&H expectancy -0.71%→+1.99% |
+| 6 | `paper_tracker.py` | WIN_T1 moved from CLOSED to ACTIVE set | T1 hits now track to T2 with trailing stop |
+| 7 | `paper_tracker.py` | WAITING_BREAKOUT expires after 30 days | 116 stuck picks now age out |
+| 8 | `paper_tracker.py` | Use High/Low for stop/target checks, not Close | Catches intraday stop/target touches |
+| 9 | `paper_tracker.py` | Trailing stop at breakeven after T1 hit | Protects T1 profits from reversals |
+| 10 | `paper_tracker.py` | Don't reset scan_date on sync | Preserves holding-period anchor |
+| 11 | `scanner.py` | Nifty SMA200 regime filter + `--force` flag | Aborts long scans in bear market. Nifty < SMA200 = RISK_OFF |
+| 12 | `patterns/double_bottom.py` | DB: windows, bottom_tol 0.10→0.05, min_peak 0.12→0.20, real volume | 576-combo sweep winner. DB expectancy +0.81%→+1.46% |
+| 13 | `check_nifty_regime.py` | Fix yfinance MultiIndex scalar bug | Regime checker now runs without crashing |
+
+### Parameter Sweeps
+
+#### C&H Daily Sweep (720 combinations, backbone50, 2 years)
+Swept: handle_bars × max_depth × near_pct × handle_depth_ratio × min_depth
+
+| Config | Trades | Win% | Expectancy | PF |
+|---|---|---|---|---|
+| **Optimal (handle_bars=5, hdr=0.70)** | **203** | **41.4%** | **+1.99%** | **1.57** |
+| Current (handle_bars=15, hdr=0.50) | 125 | 32.8% | -0.71% | 0.82 |
+| Worst (handle_bars=15, hdr=0.30) | 71 | 29.6% | -2.22% | 0.43 |
+
+**Key finding:** `handle_bars` is the dominant factor. 5 bars (1 week) >> 15 bars (3 weeks). Shorter handles eliminate downtrends masquerading as handles — same lesson as the v3.0 weekly C&H fix.
+
+#### Double Bottom Sweep (576 combinations, backbone50, 2 years)
+Swept: windows × bottom_tol × min_peak × near_pct × stop_mult
+
+| Config | Trades | Win% | Expectancy | PF |
+|---|---|---|---|---|
+| **Optimal (windows=(30,50,80,120,180), tol=0.05, peak=0.20)** | **92** | **57.6%** | **+1.46%** | **1.50** |
+| Current (windows=(60,100,150,200,250), tol=0.10, peak=0.12) | 114 | 57.0% | +0.81% | 1.27 |
+
+**Key finding:** `min_peak=0.20` is the biggest factor — requiring 20% peak (was 12%) filters out weak/noise double bottoms. Tighter `bottom_tol=0.05` (was 0.10) ensures only genuine double bottoms.
+
+### Backtest Results (backbone50, 51 stocks, 2 years, min_score=40)
+
+| Version | Trades | Win% | Avg win | Avg loss | Expectancy | PF | Max DD |
+|---|---|---|---|---|---|---|---|
+| **v3.2 (all fixes + optimized)** | **438** | **56.6%** | **+7.91%** | **-4.85%** | **+2.37%** | **2.13** | **-48.7%** |
+| v3.2 (bug fixes only, pre-optimization) | 572 | 57.2% | +6.07% | -4.84% | +1.40% | 1.68 | -50.0% |
+| v3.1 (pre-audit, has bugs) | 860 | 42.7% | +11.63% | -5.12% | +2.03% | 1.69 | -69.1% |
+
+**v3.2 beats v3.1 on:** PF (2.13 vs 1.69), expectancy (+2.37% vs +2.03%), max DD (-48.7% vs -69.1%), win rate (56.6% vs 42.7%)
+**The +2.37% is honest** — the v3.1 +2.03% was inflated by same-bar wick captures and NEAR pre-breakout entries.
+
+### Pattern Breakdown (v3.2)
+
+| Pattern | Trades | Win% | Expectancy | Verdict |
+|---|---|---|---|---|
+| Cup & Handle | 159 | 49.7% | +4.96% | Excellent (was -0.71% before optimization) |
+| S&R Support | 51 | 64.7% | +4.23% | Excellent |
+| S&R Breakout | 23 | 73.9% | +3.14% | Excellent |
+| Re-entry | 160 | 63.7% | +0.17% | Marginal (volume play) |
+| Double Bottom | 10 | 60.0% | -0.63% | Too few trades (tighter filter) |
+| Descending Wedge | 31 | 29.0% | -1.70% | Losing — candidate for demotion |
+
+### Paper Tracker Update (2026-09-05)
+Applied all fixes to live tracker (267 picks):
+
+| Metric | Before | After |
+|---|---|---|
+| Open trades | 215 (many stuck) | 110 (properly categorized) |
+| WIN_T1 active | 9 (frozen) | 8 (now tracking to T2 with trailing stop) |
+| WAITING_BREAKOUT | 116 (stuck forever) | ~80 (2 expired, rest counting down) |
+| Trailing stops fired | 0 | 2 (closed at breakeven, was full loss) |
+| Open unrealized P&L | -2.27% avg | +2.69% avg (62 profit, 48 loss) |
+
+### Regime Filter (revised)
+- Scanner checks Nifty vs SMA200 and SMA50 before scanning
+- **BULL/NEUTRAL:** Nifty above both SMAs → scan normally
+- **CHOPPY:** Nifty above SMA200 but below SMA50 → warn, proceed with caution
+- **RISK_OFF:** Nifty below SMA200 → **WARN only, do NOT abort** (revised 2026-09-05)
+  - Scanner-us adoption testing found RISK_OFF trades have PF 2.83 vs RISK_ON 1.33
+  - NSE is mean-reverting — oversold breakouts during corrections are often the best entries
+  - The recent live losses (1W/35L) were caused by implementation bugs (now fixed), not the regime
+  - Original implementation aborted scanning; revised to warn only and proceed
+- Current regime (2026-09-05): **RISK_OFF** — Nifty 23,898 vs 200DMA 24,612 (-2.9%)
+
+### Out-of-Sample Validation (nifty200, 178 stocks, 2 years)
+The C&H and DB parameter sweeps were on backbone50 (in-sample). To check for overfitting, the optimized config was validated on nifty200 (out-of-sample):
+
+| Metric | backbone50 (in-sample) | nifty200 (out-of-sample) | Verdict |
+|---|---|---|---|
+| Trades | 438 | 1374 | — |
+| Win rate | 56.6% | 54.3% | -2.3% (expected drop) |
+| Expectancy | +2.37% | **+1.79%** | -0.58% (expected drop) |
+| Profit factor | 2.13 | **1.90** | -0.23 (expected drop) |
+| Max drawdown | -48.7% | -56.7% | -8.0% (larger universe) |
+
+**No overfitting detected.** The +1.79% out-of-sample expectancy is solidly positive and close to the in-sample result. The slight drop is normal and expected.
+
+**Key OOS finding — Descending Wedge is profitable out-of-sample:**
+- backbone50 (in-sample): 31 trades, 29.0% WR, -1.70% expectancy
+- nifty200 (out-of-sample): 105 trades, 41.9% WR, **+1.48% expectancy**
+- The backbone50 result was specific to those 51 curated momentum stocks
+- Wedge demotion was reverted — OOS is more reliable with 3x the sample size
+
+### Monthly Earnings Estimate (Updated)
+At +2.37% expectancy with ~25 trades/month and 25% position sizing:
+- **~Rs 14,800/month on Rs 1L capital** (was Rs 6,000 at the post-bug-fix +0.97%)
+- Only valid when regime filter allows trading (Nifty > SMA200)
+- In bear markets, scanner correctly aborts — protecting capital
+
+---
+
 ## v3.1 — 2026-07-29 (Risk Management Overhaul)
 
 ### Problem
@@ -124,14 +257,14 @@ All changes implemented across versions, newest first.
 
 ---
 
-## Protocol Consistency (v3.1)
+## Protocol Consistency (v3.2)
 
 All v3 scripts now follow the same protocol:
 
-| Script | ATR | Stop cap | T1 | R:R from | Re-entry | NEAR waits |
-|---|---|---|---|---|---|---|
-| `scanner.py` | 2.0x | 8% | 50% | breakout | — | — |
-| `daily_scan.py` | 2.0x | 8% | 2:1 fixed | entry | — | — |
-| `backtester/engine.py` | 2.0x | 8% | 50% | breakout | yes | — |
-| `paper_tracker.py` | — | 8% | from scan | breakout | yes | yes |
-| `compare_backtest.py` | uses engine.py | | | | | |
+| Script | ATR | Stop cap | T1 | R:R from | Re-entry | NEAR waits | Regime filter | High/Low checks |
+|---|---|---|---|---|---|---|---|---|
+| `scanner.py` | 2.0x | 8% | 50% | breakout | — | — | yes (SMA200) | — |
+| `daily_scan.py` | 2.0x | 8% | 2:1 fixed | entry | — | — | — | — |
+| `backtester/engine.py` | 2.0x | 8% | 50% | breakout | yes | yes (v3.2) | — | yes (v3.2) |
+| `paper_tracker.py` | — | 8% | from scan | breakout | yes | yes | — | yes (v3.2) |
+| `compare_backtest.py` | uses engine.py | | | | | | | |

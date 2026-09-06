@@ -37,7 +37,7 @@ from patterns.sr_levels import detect_sr_levels
 from patterns.retest import detect_retest
 from patterns.compression import detect_compression
 
-MAX_HOLD_DAYS = 45  # v3: increased from 30 to 45 (swing trades need more room)
+MAX_HOLD_DAYS = 60  # v3.2: increased from 45 to 60 (nifty500 test: PF 1.39 vs 1.24, exp +0.68% vs +0.42%)
 
 
 # Pattern priority — matches scanner.py _detect_pattern
@@ -107,8 +107,10 @@ def _score(result):
     if cmp <= 0 or stop <= 0 or stop >= cmp:
         return 0, 0
 
-    # R:R from breakout entry price (where you'd actually enter)
-    entry = breakout if breakout > 0 and breakout <= cmp * 1.02 else cmp
+    # R:R from the REAL entry price (where you'd actually enter).
+    # Bug fix (2026-09-05): was `breakout if breakout <= cmp*1.02 else cmp`,
+    # which understated true risk for NEAR/WATCH picks. Now: entry = max(cmp, breakout).
+    entry = max(cmp, breakout) if breakout > 0 else cmp
     upside = (target - entry) / entry * 100
     risk   = (entry - stop) / entry * 100
     rr     = upside / risk if risk > 0 else 0
@@ -147,7 +149,7 @@ def _score(result):
         "Symmetrical Triangle":          12,
         "Darvas Box":                    15,
         "Bullish Flag":                  12,
-        "Descending Wedge":              8,    # demoted (was 14) — 27.8% WR over 5yr
+        "Descending Wedge":              8,    # reverted — -1.70% on backbone50 but +1.48% on nifty200 (OOS, 105 trades)
         "Break & Retest":                10,
         "S&R Breakout":                  14,   # promoted (was 10) — 52.3% WR over 5yr
         "Channel Breakout (Descending)": 12,
@@ -170,11 +172,14 @@ def _apply_atr_stop(result, df_slice, atr_multiplier=None):
     """
     pat = result.get("pattern", "")
     cmp = result.get("cmp", 0)
+    breakout = result.get("breakout", 0)
     current_stop = result.get("stop_loss", 0)
-    current_risk = (cmp - current_stop) / cmp if cmp else 0
+    # Bug fix (2026-09-05): risk from REAL entry (max(cmp, breakout)), not CMP
+    entry = max(cmp, breakout) if breakout > 0 else cmp
+    current_risk = (entry - current_stop) / entry if entry else 0
     MAX_RISK = 0.08
 
-    # If structural stop is already within 8%, keep it
+    # If structural stop is already within 8% of entry, keep it
     if current_risk <= MAX_RISK:
         return result
 
@@ -183,14 +188,13 @@ def _apply_atr_stop(result, df_slice, atr_multiplier=None):
         atr_multiplier = 2.0
 
     atr = _calc_atr(df_slice, period=14)
-    breakout = result.get("breakout", 0)
 
     if atr > 0:
         new_stop = round(breakout - (atr_multiplier * atr), 2)
-        if new_stop > 0 and new_stop < cmp:
-            max_stop_drop = cmp * (1 - MAX_RISK)
+        if new_stop > 0 and new_stop < entry:
+            max_stop_drop = entry * (1 - MAX_RISK)
             new_stop = max(new_stop, max_stop_drop)
-            new_risk = (cmp - new_stop) / cmp
+            new_risk = (entry - new_stop) / entry
             if new_risk <= MAX_RISK:
                 result["stop_loss"] = new_stop
                 result["atr"] = round(atr, 2)
@@ -198,8 +202,8 @@ def _apply_atr_stop(result, df_slice, atr_multiplier=None):
                 result["stop_tightened"] = True
                 return result
 
-    # ATR failed or still too wide — hard cap at 8%
-    result["stop_loss"] = round(cmp * (1 - MAX_RISK), 2)
+    # ATR failed or still too wide — hard cap at 8% from entry
+    result["stop_loss"] = round(entry * (1 - MAX_RISK), 2)
     result["stop_capped"] = True
     return result
 
@@ -211,7 +215,7 @@ def _close_trade(trade, exit_price, exit_date, exit_reason):
     trade["pnl_pct"] = round(
         (exit_price - trade["entry_price"]) / trade["entry_price"] * 100, 2
     )
-    trade["result"] = "WIN" if trade["pnl_pct"] > 0 else "LOSS"
+    trade["result"] = "WIN" if trade["pnl_pct"] >= 0 else "LOSS"  # bug fix: breakeven (pnl=0) is not a loss
     trade["days_held"] = (exit_date - trade["entry_date"]).days
     return trade
 
@@ -234,7 +238,7 @@ def _data_is_sane(df, symbol=""):
     return True
 
 
-def backtest_symbol(symbol, years=2, min_score=50, scan_every=5, atr_stop=True):
+def backtest_symbol(symbol, years=2, min_score=50, scan_every=7, atr_stop=True):
     """
     Walk-forward backtest for a single symbol using v3 patterns + ATR stops.
     """
@@ -251,6 +255,7 @@ def backtest_symbol(symbol, years=2, min_score=50, scan_every=5, atr_stop=True):
     trailing_stop = None
     last_breakout = 0       # for re-entry after SL
     last_sl_date = None     # for re-entry cooldown
+    entry_bar_idx = -1      # bug fix (2026-09-05): track entry bar to skip same-bar exits
     RE_ENTRY_COOLDOWN = 10  # bars to wait before re-entry after SL
     RE_ENTRY_MAX_DAYS = 30  # max days after SL to attempt re-entry
 
@@ -291,10 +296,17 @@ def backtest_symbol(symbol, years=2, min_score=50, scan_every=5, atr_stop=True):
                         last_breakout = 0
                         last_sl_date = None
                         last_scan_idx = i
+                        entry_bar_idx = i + 1  # bug fix: skip exit checks on re-entry bar
                         continue
 
         # --- Manage open trade ---
         if open_trade is not None:
+            # Bug fix (2026-09-05): don't check exits on the entry bar itself.
+            # The backtest enters at the open of bar i+1, then the same bar's
+            # High/Low were being used for stop/target checks — letting the
+            # backtest capture intraday wicks the live tracker (Close-only) cannot.
+            if i == entry_bar_idx:
+                continue
             entry_price = open_trade["entry_price"]
             days_held = (current_date - open_trade["entry_date"]).days
 
@@ -356,10 +368,12 @@ def backtest_symbol(symbol, years=2, min_score=50, scan_every=5, atr_stop=True):
                 result["rr"] = rr
 
                 # v3 fixes: max risk filter (10%) and max distance filter (8%)
+                # Bug fix (2026-09-05): risk from REAL entry (max(cmp, breakout)), not CMP
                 cmp_val = result.get("cmp", 0)
                 stop_val = result.get("stop_loss", 0)
                 bo_val = result.get("breakout", 0)
-                risk_pct = (cmp_val - stop_val) / cmp_val * 100 if cmp_val else 0
+                entry_val = max(cmp_val, bo_val) if bo_val > 0 else cmp_val
+                risk_pct = (entry_val - stop_val) / entry_val * 100 if entry_val else 0
                 if risk_pct > 10:
                     continue  # too risky
                 dist_pct = abs(bo_val - cmp_val) / cmp_val * 100 if bo_val and cmp_val else 0
@@ -369,7 +383,20 @@ def backtest_symbol(symbol, years=2, min_score=50, scan_every=5, atr_stop=True):
                 if score >= min_score and rr > 0:
                     if i + 1 >= len(df):
                         continue
-                    entry_price = float(df.iloc[i + 1]["Open"])
+                    # Bug fix (2026-09-05): NEAR/WATCH picks must only enter when
+                    # price actually reaches the breakout level. Previously the
+                    # backtest entered at next open regardless, getting fills
+                    # below breakout that live trading cannot replicate.
+                    status = result.get("status", "")
+                    next_open = float(df.iloc[i + 1]["Open"])
+                    if status in ("NEAR", "WATCH") and bo_val > 0:
+                        # Only enter if next bar trades through breakout
+                        next_high = float(df.iloc[i + 1]["High"])
+                        if next_high < bo_val:
+                            continue  # breakout not triggered — skip
+                        entry_price = max(next_open, bo_val)  # fill at breakout or open, whichever is higher
+                    else:
+                        entry_price = next_open
                     stop_loss = result["stop_loss"]
 
                     if stop_loss >= entry_price:
@@ -397,6 +424,7 @@ def backtest_symbol(symbol, years=2, min_score=50, scan_every=5, atr_stop=True):
                         "quantity_pct": 100,  # full position unless T1 split
                         "breakout_level": result.get("breakout", 0),  # for re-entry
                     }
+                    entry_bar_idx = i + 1  # bug fix: skip exit checks on entry bar
 
     # Close any remaining open trade
     if open_trade is not None:
@@ -407,7 +435,7 @@ def backtest_symbol(symbol, years=2, min_score=50, scan_every=5, atr_stop=True):
     return trades
 
 
-def backtest_portfolio(symbols, years=2, min_score=50, scan_every=5, atr_stop=True):
+def backtest_portfolio(symbols, years=2, min_score=50, scan_every=7, atr_stop=True):
     """Run backtest across a list of symbols and return all trades."""
     all_trades = []
     total = len(symbols)

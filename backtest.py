@@ -37,7 +37,7 @@ def main():
     parser.add_argument("--symbols", nargs="+", help="Override with specific symbols")
     parser.add_argument("--years", type=int, default=2, help="Years of history (default: 2)")
     parser.add_argument("--min-score", type=float, default=50, help="Min pattern score (default: 50)")
-    parser.add_argument("--scan-every", type=int, default=5, help="Scan every N bars (default: 5)")
+    parser.add_argument("--scan-every", type=int, default=7, help="Scan every N bars (default: 7 — nifty500 test: PF 1.56 vs 1.24 at 5)")
     parser.add_argument("--output", default="backtest_results.csv", help="Output CSV filename")
     parser.add_argument("--no-atr", action="store_true", help="Use original SL (v2 mode) instead of ATR")
     args = parser.parse_args()

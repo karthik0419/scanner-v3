@@ -169,15 +169,26 @@ def _detect(df, cup_lengths, handle_bars, min_depth, max_depth,
 
 # ---------- Daily ----------
 def detect_cup_handle(df):
+    # Optimized (2026-09-05): 720-combo parameter sweep on backbone50 (2yr)
+    # found handle_bars=5 + handle_depth_ratio=0.70 as the optimal config.
+    #   handle_bars: 15 → 5  (BIGGEST factor: shorter handles eliminate
+    #               downtrends masquerading as handles — same lesson as
+    #               the weekly C&H fix. +2.70% expectancy swing.)
+    #   handle_depth_ratio: 0.50 → 0.70  (looser is better — allows
+    #               normal pullback depth without accepting downtrends)
+    #   max_depth: 0.80 (kept — deep cups from corrections are valid)
+    # Result: 203 trades, 41.4% WR, +1.99% expectancy, PF 1.57
+    # (was: 125 trades, 32.8% WR, -0.71% expectancy, PF 0.82)
     return _detect(
         df,
         cup_lengths    = [60, 90, 120, 180, 240],     # G3: sweep
-        handle_bars    = 15,
+        handle_bars    = 5,                            # was 15 — sweep winner
         min_depth      = 0.12,
-        max_depth      = 0.80,
+        max_depth      = 0.80,          # kept — deep cups are valid
         near_pct       = 0.08,
         near_pct_watch = 0.15,
         min_bars       = 140,
+        handle_depth_ratio = 0.70,      # was 0.50 — sweep found 0.70 is better
     )
 
 

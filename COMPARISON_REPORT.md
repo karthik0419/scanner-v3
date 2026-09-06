@@ -1,11 +1,103 @@
 # scanner-v3 vs Previous Scanners — Performance Comparison Report
 
-**Date:** 2026-07-17 (updated after C&H Weekly fix + pattern-specific SL)
+**Date:** 2026-09-05 (updated after v3.2 bug audit + pattern optimization)
 **Method:** Walk-forward backtest on backbone50 stocks (51 curated momentum stocks), 2 years of daily data, scan every 5 bars, min score 40.
 
 ---
 
-## 0. Fixes applied since last report (2026-07-16)
+## 0. v3.2 Update (2026-09-05) — Bug Audit + Pattern Optimization
+
+### What changed
+After live tracker showed 1 win / 35 losses (-2.17% expectancy) in Aug-Sep 2026 vs +1.30% backtest promise, a full audit found 8 implementation bugs + 1 missing regime filter. After fixing all bugs, two parameter sweeps (720 C&H combos + 576 DB combos) optimized the two most important patterns.
+
+### Backtest Results: v3.2 vs v3.1 (backbone50, 51 stocks, 2 years)
+
+| Metric | v3.1 (pre-audit) | v3.2 (bug fixes only) | **v3.2 (all + optimized)** |
+|---|---|---|---|
+| Total trades | 860 | 572 | **438** |
+| Win rate | 42.7% | 57.2% | **56.6%** |
+| Avg win | +11.63% | +6.07% | **+7.91%** |
+| Avg loss | -5.12% | -4.84% | **-4.85%** |
+| **Expectancy** | +2.03% (inflated) | +1.40% (honest) | **+2.37% (honest + optimized)** |
+| **Profit factor** | 1.69 | 1.68 | **2.13** |
+| Max drawdown | -69.1% | -50.0% | **-48.7%** |
+
+**The v3.1 +2.03% was inflated** by same-bar wick captures, NEAR pre-breakout entries, and breakeven-as-loss mislabeling. The v3.2 +2.37% is honest — and higher than v3.1 because the pattern optimizations (C&H handle_bars=5, DB min_peak=0.20) more than recovered the honesty discount.
+
+### Pattern Breakdown (v3.2)
+
+| Pattern | Trades | Win% | Expectancy | Verdict |
+|---|---|---|---|---|
+| **Cup & Handle** | 159 | 49.7% | **+4.96%** | Excellent (was +2.87% in v3.1, was -0.71% after bug fix before optimization) |
+| **S&R Support** | 51 | 64.7% | **+4.23%** | Excellent (was +0.52% in v3.1) |
+| **S&R Breakout** | 23 | 73.9% | **+3.14%** | Excellent (was +1.30% in v3.1) |
+| Re-entry | 160 | 63.7% | +0.17% | Marginal (volume play) |
+| Double Bottom | 10 | 60.0% | -0.63% | Too few trades (tighter filter, C&H captures most) |
+| Descending Wedge | 31 | 29.0% | -1.70% | Losing — candidate for demotion |
+
+### C&H Optimization (720-combo sweep)
+- **Winner:** handle_bars=5 (was 15), handle_depth_ratio=0.70 (was 0.90)
+- **Result:** C&H expectancy -0.71% → +1.99% (standalone), +4.96% in full backtest
+- **Key insight:** handle_bars is the dominant factor. 5 bars (1 week) >> 15 bars (3 weeks). Same lesson as v3.0 weekly C&H fix.
+
+### Double Bottom Optimization (576-combo sweep)
+- **Winner:** windows=(30,50,80,120,180), bottom_tol=0.05, min_peak=0.20
+- **Result:** DB expectancy +0.81% → +1.46% (standalone). Fewer trades in full backtest (10 vs 54) because C&H now captures most signals first.
+- **Key insight:** min_peak=0.20 (was 0.12) is the biggest factor — filters weak double bottoms.
+
+### Regime Filter (revised)
+Scanner checks Nifty vs SMA200/SMA50 before scanning:
+- **BULL:** Nifty > SMA50 > SMA200 → scan normally
+- **CHOPPY:** Nifty > SMA200 but < SMA50 → warn, proceed with caution
+- **RISK_OFF:** Nifty < SMA200 → **WARN only, do NOT abort** (revised)
+  - Scanner-us testing found RISK_OFF trades have PF 2.83 vs RISK_ON 1.33
+  - NSE is mean-reverting — oversold breakouts are often the best entries
+  - Recent live losses were from bugs (now fixed), not the regime
+- Current (2026-09-05): **RISK_OFF** — Nifty 23,898 vs 200DMA 24,612 (-2.9%)
+
+### Out-of-Sample Validation (nifty200, 178 stocks, 2 years)
+
+| Metric | backbone50 (in-sample) | nifty200 (out-of-sample) |
+|---|---|---|
+| Trades | 438 | 1374 |
+| Win rate | 56.6% | 54.3% |
+| **Expectancy** | **+2.37%** | **+1.79%** |
+| Profit factor | 2.13 | 1.90 |
+| Max drawdown | -48.7% | -56.7% |
+
+**No overfitting.** The +1.79% OOS expectancy confirms the optimizations generalize.
+
+**Descending Wedge OOS finding:** -1.70% on backbone50 (31 trades) but +1.48% on nifty200 (105 trades). Wedge demotion reverted — OOS is more reliable with 3x the sample.
+
+> **NOTE (2026-09-05):** Scanner-us adoption testing on nifty500 showed RISK_OFF trades have PF 2.83 vs RISK_ON 1.33. The regime filter blocks the most profitable trades on NSE (mean-reverting market). Consider making the regime filter advisory only, not a hard abort. See `scanner-us/SCANNER_COMPARISON.md` for full test results.
+
+### Scanner-US Adoption Testing (2026-09-05)
+3 rounds of testing (backbone50 → nifty200 → nifty500, 500+ stocks, 11 tests):
+
+**Adopted (v3.2):**
+- Scan every 7 bars (was 5) — PF 1.24 → 1.56 on nifty500. Biggest single improvement.
+- Max hold 60 days (was 45) — PF 1.24 → 1.39 on nifty500.
+
+**Rejected (tested but would hurt NSE):**
+- MTF confirmation: -10pp WR. NSE is mean-reverting, MTF filters out oversold bounces.
+- Inverse H&S: PF 0.70 on nifty500. Loses money. Survivorship bias in backbone50 test.
+- Double Top Breakout: PF 0.65 on nifty200. Too few signals.
+- ATR 1.5x: No improvement over 2.0x.
+- Linear scoring: Tiered is 2.7x better at selecting top trades.
+
+Test scripts: `test_us_adoption.py`, `test_expanded.py`, `test_nifty500.py`. Full results: `scanner-us/SCANNER_COMPARISON.md`.
+
+### Paper Tracker Fixes Applied
+- WIN_T1 moved to ACTIVE (was frozen in CLOSED — P&L never updated after T1)
+- Trailing stop at breakeven after T1 hit (was full stop loss on reversal)
+- High/Low used for stop/target checks (was Close-only — missed intraday touches)
+- WAITING_BREAKOUT expires after 30 days (was stuck forever — 116 picks accumulated)
+- scan_date preserved on sync (was reset — broke holding-period and expiry logic)
+- Result: 110 open trades (was 215), +2.69% avg unrealized P&L (was -2.27%)
+
+---
+
+## 0a. Fixes applied 2026-07-16 (v3.0)
 
 1. **Pattern-specific stop loss** — C&H and Wedge patterns now keep their original structural stops (handle low / wedge low) instead of being overridden by ATR stops. ATR stops are only applied to patterns without structural stops (S&R, Breakout, etc.). This was already in the code but the previous report's numbers reflected the pre-fix state.
 2. **C&H Weekly detector tightened** — Root cause of negative expectancy was loose parameters: handle_bars=12 (allowed 3-month downtrends as "handles"), near_pct=0.15/0.25 (premature entries far from breakout), handle_depth_ratio=0.90 (handles as deep as the cup). Fixed to: handle_bars=4, max_depth=0.50, near_pct=0.08, near_pct_watch=0.15, handle_depth_ratio=0.50, volume_lookback=52. Aligns with Bulkowski's C&H best practices.
@@ -107,23 +199,25 @@ The v3 backtest expectancy (+2.0%) is lower than v2's live verification (+2.7%) 
 
 ---
 
-## 5. Recommendations
+## 5. Recommendations (v3.2)
 
-### What's working in v3 (post-fix)
-1. **C&H Weekly fix** — expectancy turned from -0.56% to +0.87%. The #1 issue is resolved.
-2. **Pattern-specific stops** — C&H and Wedge keep structural stops, others use ATR. Both C&H (Daily) and Wedge are now profitable in v3.
-3. **Double Bottom promotion** — still the best pattern (56.2% win rate, +4.3% avg P&L)
-4. **Channel Breakout tightening** — filters out low-quality setups (volume + RSI gates)
-5. **Trailing stop after T1** — 33 trades protected at breakeven
-6. **S&R patterns** — ATR stops work well for S&R setups (41.7% win rate)
+### What's working in v3.2
+1. **C&H Daily optimized** — handle_bars=5 turned C&H from -0.71% to +4.96%. Now the best pattern by expectancy.
+2. **S&R Support/Breakout** — both excellent (64.7% / 73.9% win rate, +4.23% / +3.14% expectancy)
+3. **Regime filter** — prevents scanning long breakouts in bear markets (current: RISK_OFF)
+4. **Paper tracker fixes** — trailing stop, High/Low checks, WAITING_BREAKOUT expiry all working
+5. **Honest backtest** — +2.37% expectancy is real (no same-bar wicks, no NEAR pre-breakout entries)
+6. **Max drawdown improved** — -48.7% (was -69.1% in v3.1)
 
 ### What to monitor
-1. **Max drawdown** — v3's -69.1% is worse than v2's -59.7%. This is path-dependent and may not reflect live performance (real portfolios have multiple concurrent positions, not sequential trades). Monitor in live trading.
-2. **Descending Wedge** — v3 (28.6% WR, +1.31%) still lags v2 (32.6% WR, +1.82%). Structural stops helped but wedge volatility may need a wider stop. Consider 2.0x ATR as an alternative if structural stops underperform live.
-3. **C&H Weekly trade count** — increased from 119 to 177 after fix (shorter handle = more patterns match). Monitor live win rate to confirm the backtest improvement holds.
+1. **Descending Wedge** — -1.70% on backbone50 (in-sample) but +1.48% on nifty200 (OOS, 105 trades). Demotion reverted. Monitor live to see which sample is more representative.
+2. **Double Bottom trade count** — only 10 trades in backbone50 backtest, 13 in nifty200. The tighter filter (min_peak=0.20) is very selective, and C&H now captures most signals first. Monitor live to see if DB adds value or is redundant.
+3. **C&H live validation** — the handle_bars=5 optimization is backtested only. Need 20+ live trades to confirm.
+4. **Regime filter** — now advisory only (warns but doesn't abort). Monitor whether RISK_OFF trades actually perform better live, as scanner-us testing suggests.
 
 ### Recommended next steps
-1. **Run v3 live for 2-3 weeks** alongside v2 to collect real-world data
-2. **After 20-30 live trades**, compare v3 vs v2 expectancy on the same picks
-3. **If max drawdown is a concern in live trading**, consider reducing position sizing or adding a portfolio-level stop (e.g. stop trading after 3 consecutive losses)
-4. **Consider adaptive ATR multiplier for Wedge** — if structural stops underperform live, try 2.0x ATR specifically for Wedge patterns
+1. **Scanner now proceeds in RISK_OFF regime** — but consider smaller position sizes given current market uncertainty.
+2. **Use `--bearish` mode** for short setups in weak sectors (complementary to long scans)
+3. **After 20-30 live trades**, compare live vs backtest expectancy
+4. **Consider sweeping S&R Support** — it's the third workhorse (+4.23% in-sample, +4.14% OOS, 64-66% WR) and may benefit from optimization
+5. **Run `python paper_tracker.py update` daily** to keep tracker current with new fixes

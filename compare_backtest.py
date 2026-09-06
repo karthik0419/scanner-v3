@@ -62,7 +62,7 @@ def main():
     parser.add_argument("--symbols", nargs="+")
     parser.add_argument("--years", type=int, default=2)
     parser.add_argument("--min-score", type=float, default=50)
-    parser.add_argument("--scan-every", type=int, default=5)
+    parser.add_argument("--scan-every", type=int, default=7)
     args = parser.parse_args()
 
     if args.symbols:

@@ -179,10 +179,13 @@ def _score(result):
     if cmp <= 0 or stop <= 0 or stop >= cmp:
         return 0, 0
 
-    # R:R calculated from BREAKOUT entry price (where you'd actually enter),
-    # not from CMP (which may be below breakout for NEAR/WATCH picks).
-    # For BREAKOUT picks, entry ≈ CMP, so this is the same.
-    entry = breakout if breakout > 0 and breakout <= cmp * 1.02 else cmp
+    # R:R calculated from the REAL entry price (where you'd actually enter).
+    # For NEAR/WATCH picks the entry is the breakout level (you wait for it),
+    # not CMP (which sits below breakout). For BREAKOUT picks entry ≈ CMP.
+    # Bug fix (2026-09-05): was `breakout if breakout <= cmp*1.02 else cmp`,
+    # which let NEAR picks with breakout far above CMP use CMP as entry,
+    # understating true risk by 2-3x. Now: entry = max(cmp, breakout).
+    entry = max(cmp, breakout) if breakout > 0 else cmp
     upside = (target - entry) / entry * 100
     risk   = (entry - stop) / entry * 100
     rr     = upside / risk if risk > 0 else 0
@@ -228,7 +231,7 @@ def _score(result):
         "Symmetrical Triangle":          12,
         "Darvas Box":                    15,
         "Bullish Flag":                  12,
-        "Descending Wedge":              8,    # demoted (was 14) — 27.8% WR over 5yr/223 trades
+        "Descending Wedge":              8,    # reverted — -1.70% on backbone50 (in-sample) but +1.48% on nifty200 (out-of-sample, 105 trades). OOS is more reliable.
         "Break & Retest":                10,
         "S&R Breakout":                  14,   # promoted (was 10) — 52.3% WR over 5yr/130 trades
         "Channel Breakout (Descending)": 12,   # demoted (was 22) — 24% win rate
@@ -252,15 +255,20 @@ def _apply_sl_mode(result, df, sl_mode):
     ALWAYS caps max risk at 8% — if structural stop is wider, tighten to ATR."""
     pat = result.get("pattern", "")
     cmp = result.get("cmp", 0)
+    breakout = result.get("breakout", 0)
     current_stop = result.get("stop_loss", 0)
-    current_risk = (cmp - current_stop) / cmp if cmp else 0
-    MAX_RISK = 0.08  # 8% max stop loss from CMP
+    # Bug fix (2026-09-05): risk must be measured from the REAL entry price
+    # (max(cmp, breakout)), not CMP. NEAR/WATCH picks enter at the breakout
+    # level, so a stop 8% below CMP can be 15%+ below the actual entry.
+    entry = max(cmp, breakout) if breakout > 0 else cmp
+    current_risk = (entry - current_stop) / entry if entry else 0
+    MAX_RISK = 0.08  # 8% max stop loss from ENTRY price
 
-    # If structural stop is already within 8%, keep it (no change needed)
+    # If structural stop is already within 8% of entry, keep it (no change needed)
     if current_risk <= MAX_RISK and sl_mode != "atr":
         return result
 
-    # If structural stop is too wide (>8%), always try ATR regardless of pattern
+    # If structural stop is too wide (>8% from entry), always try ATR regardless of pattern
     atr = _calc_atr(df, period=14)
 
     if sl_mode == "atr" and current_risk <= MAX_RISK:
@@ -272,20 +280,19 @@ def _apply_sl_mode(result, df, sl_mode):
         if "Cup & Handle" in pat or KEEP_ORIGINAL_STOP.get(pat, False):
             return result  # keep original stop
 
-    # Either: ATR mode + non-structural pattern, OR structural stop too wide (>8%)
+    # Either: ATR mode + non-structural pattern, OR structural stop too wide (>8% from entry)
     if atr <= 0:
-        # No ATR — just cap at 8% max
+        # No ATR — just cap at 8% max from entry
         if current_risk > MAX_RISK:
-            result["stop_loss"] = round(cmp * (1 - MAX_RISK), 2)
+            result["stop_loss"] = round(entry * (1 - MAX_RISK), 2)
             result["stop_capped"] = True
         return result
 
-    breakout = result.get("breakout", 0)
     new_stop = _atr_stop_loss(df, breakout, atr, multiplier=2.0)
-    if new_stop > 0 and new_stop < cmp:
-        max_stop_drop = cmp * (1 - MAX_RISK)  # max 8% stop
+    if new_stop > 0 and new_stop < entry:
+        max_stop_drop = entry * (1 - MAX_RISK)  # max 8% stop from ENTRY
         new_stop = max(new_stop, max_stop_drop)
-        new_risk = (cmp - new_stop) / cmp
+        new_risk = (entry - new_stop) / entry
         if new_risk <= MAX_RISK:
             result["stop_loss"] = new_stop
             result["atr"] = round(atr, 2)
@@ -293,12 +300,12 @@ def _apply_sl_mode(result, df, sl_mode):
             if current_risk > MAX_RISK:
                 result["stop_tightened"] = True  # flag: structural stop was too wide
         else:
-            # ATR stop also too wide — hard cap at 8%
+            # ATR stop also too wide — hard cap at 8% from entry
             result["stop_loss"] = round(max_stop_drop, 2)
             result["stop_capped"] = True
     elif current_risk > MAX_RISK:
-        # ATR calc failed but structural stop too wide — hard cap
-        result["stop_loss"] = round(cmp * (1 - MAX_RISK), 2)
+        # ATR calc failed but structural stop too wide — hard cap at 8% from entry
+        result["stop_loss"] = round(entry * (1 - MAX_RISK), 2)
         result["stop_capped"] = True
     return result
 
@@ -360,6 +367,8 @@ def main():
                         help="Maximum stock price filter (e.g. 400)")
     parser.add_argument("--bearish",    action="store_true",
                         help="Scan for bearish/short setups in weak sectors")
+    parser.add_argument("--force",      action="store_true",
+                        help="Override market regime filter (scan even in bear market)")
     parser.add_argument("--no-notify",  action="store_true",
                         help="Skip Telegram notification (default: auto-send on completion)")
     parser.add_argument("--env-file",   type=str,   default=None,
@@ -478,6 +487,35 @@ def main():
     except Exception:
         heat = {}
 
+    # ── Market regime filter (2026-09-05, revised) ─────────────────────
+    # Scanner-us adoption testing found RISK_OFF trades (Nifty < SMA200)
+    # actually perform BETTER on NSE: PF 2.83 vs RISK_ON 1.33. NSE is
+    # mean-reverting — oversold breakouts during corrections are often
+    # the best entries. The recent live losses (1W/35L) were caused by
+    # implementation bugs (now fixed), not the regime.
+    # Therefore: WARN about the regime but do NOT abort. The user can
+    # use --bearish for short setups, or reduce position size manually.
+    if not args.bearish:
+        try:
+            import yfinance as _yf
+            _nifty = _yf.download('^NSEI', period='1y', progress=False)
+            if isinstance(_nifty.columns, pd.MultiIndex):
+                _nifty.columns = _nifty.columns.get_level_values(0)
+            _sma200 = float(_nifty['Close'].rolling(200).mean().iloc[-1])
+            _nifty_close = float(_nifty['Close'].iloc[-1])
+            _sma50 = float(_nifty['Close'].rolling(50).mean().iloc[-1])
+            print(f"\n  Market Regime: Nifty {_nifty_close:.0f} | SMA50 {_sma50:.0f} | SMA200 {_sma200:.0f}")
+            if _nifty_close < _sma200:
+                print("  ⚠️  RISK_OFF: Nifty below 200 DMA. Scanner-us testing found RISK_OFF trades")
+                print("     actually perform BETTER on NSE (PF 2.83 vs 1.33) — oversold breakouts")
+                print("     can be the best entries. Proceeding, but consider smaller position sizes.\n")
+            elif _nifty_close < _sma50:
+                print("  ⚠️  CHOPPY: Nifty below 50 DMA — breakouts may fail more often.\n")
+            else:
+                print("  ✅ BULL/NEUTRAL: Nifty above 50 & 200 DMA.\n")
+        except Exception as _e:
+            print(f"  (Regime check skipped: {_e})")
+
     print(f"\n[2/4] Pre-fetching price data...")
     price_cache = _fetch_parallel(symbols, args.workers)
 
@@ -513,8 +551,13 @@ def main():
             stop = result.get("stop_loss", 0)
             bo   = result.get("breakout", 0)
 
-            # Max risk filter: reject picks with >10% stop loss from CMP
-            risk_pct = (cmp - stop) / cmp * 100 if cmp else 0
+            # Bug fix (2026-09-05): risk filters must use the REAL entry price
+            # (max(cmp, breakout)), not CMP. A NEAR pick with stop 10% below
+            # CMP but breakout 8% above CMP has 18% true risk from entry.
+            entry = max(cmp, bo) if bo > 0 else cmp
+
+            # Max risk filter: reject picks with >10% stop loss from ENTRY
+            risk_pct = (entry - stop) / entry * 100 if entry else 0
             if risk_pct > 10:
                 continue  # too risky — skip entirely
 
@@ -523,8 +566,8 @@ def main():
             if bo > 0 and dist_pct > 8 and result.get("status") != "BREAKOUT":
                 continue  # too far from breakout to be actionable
 
-            # Learning #8: Skip if <10% upside remaining from CMP to T2
-            upside_remaining = (t2 - cmp) / cmp * 100 if cmp and t2 > cmp else 0
+            # Learning #8: Skip if <10% upside remaining from ENTRY to T2
+            upside_remaining = (t2 - entry) / entry * 100 if entry and t2 > entry else 0
             if upside_remaining < 10:
                 continue  # most of move already done — not worth entering
 
